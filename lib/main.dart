@@ -30,29 +30,23 @@ class HomePage extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xff0F2027),
-              Color(0xff203A43),
-              Color(0xff2C5364),
+              Color(0xff090979),
+              Color(0xff2E3192),
+              Color(0xff1CB5E0),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
-            Container(
-              height: 110,
-              width: 110,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.15),
-              ),
-              child: const Icon(
-                Icons.play_circle_fill_rounded,
-                size: 70,
+            const CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.white24,
+              child: Icon(
+                Icons.camera_alt_rounded,
+                size: 65,
                 color: Colors.white,
               ),
             ),
@@ -60,15 +54,27 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 30),
 
             const Text(
-              "Welcome to Viewgram",
+              "VIEWGRAM",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 30,
+                fontSize: 34,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 3,
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 15),
+
+            const Text(
+              "Welcome to Viewgram",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(height: 10),
 
             const Text(
               "Connect • Share • Discover",
@@ -78,11 +84,11 @@ class HomePage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 60),
+            const SizedBox(height: 50),
 
             SizedBox(
               width: 280,
-              height: 52,
+              height: 55,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -92,10 +98,7 @@ class HomePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text("Login"),
               ),
             ),
 
@@ -103,7 +106,7 @@ class HomePage extends StatelessWidget {
 
             SizedBox(
               width: 280,
-              height: 52,
+              height: 55,
               child: OutlinedButton(
                 onPressed: () {
                   Navigator.push(
@@ -115,14 +118,9 @@ class HomePage extends StatelessWidget {
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(
-                    color: Colors.white,
-                  ),
+                  side: const BorderSide(color: Colors.white),
                 ),
-                child: const Text(
-                  "Create Account",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text("Create Account"),
               ),
             ),
           ],
