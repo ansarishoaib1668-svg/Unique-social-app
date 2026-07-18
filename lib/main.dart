@@ -194,21 +194,24 @@ SizedBox(
   width: double.infinity,
   child: ElevatedButton(
     onPressed: () {
-      if (usernameController.text == "shoaib" &&
-          passwordController.text == "908070") {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Login Successful"),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Wrong Username or Password"),
-          ),
-        );
-      }
-    },
+  print("Username: '${usernameController.text}'");
+  print("Password: '${passwordController.text}'");
+
+  if (usernameController.text == "shoaib" &&
+      passwordController.text == "908070") {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Login Successful"),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Wrong Username or Password"),
+      ),
+    );
+  }
+},
     child: const Text("Login"),
   ),
 ),
@@ -292,4 +295,3 @@ class SignupPage extends StatelessWidget {
     );
   }
 }
-
