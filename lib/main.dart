@@ -34,40 +34,36 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+
                 const Icon(
-                  Icons.people_alt_rounded,
-                  size: 100,
+                  Icons.people,
+                  size: 80,
                   color: Colors.blue,
                 ),
-                const SizedBox(height: 30),
+
+                const SizedBox(height: 20),
 
                 const Text(
-                  "Welcome to Unique Social 🚀",
-                  textAlign: TextAlign.center,
+                  "Welcome to Unique Social",
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
 
-                const SizedBox(height: 10),
-
-                const Text(
-                  "A new way to connect with the world",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-
-                const SizedBox(height: 50),
+                const SizedBox(height: 40),
 
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Login button clicked"),
+                        ),
+                      );
+                    },
                     child: const Text(
                       "Login",
                       style: TextStyle(fontSize: 18),
@@ -81,7 +77,13 @@ class HomePage extends StatelessWidget {
                   width: double.infinity,
                   height: 55,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Create Account clicked"),
+                        ),
+                      );
+                    },
                     child: const Text(
                       "Create Account",
                       style: TextStyle(fontSize: 18),
