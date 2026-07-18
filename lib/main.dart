@@ -144,25 +144,15 @@ final passwordController = TextEditingController();
             const SizedBox(height: 15),
 
             TextField(
-              obscureText: hidePassword,
-              decoration: InputDecoration(
-                labelText: "Password",
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    hidePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      hidePassword = !hidePassword;
-                    });
-                  },
-                ),
-              ),
-            ),
+  controller: usernameController,
+  decoration: const InputDecoration(
+    labelText: "Username",
+    border: OutlineInputBorder(),
+    prefixIcon: Icon(Icons.person),
+  ),
+),
+
+const SizedBox(height: 15),
 
             const SizedBox(height: 10),
 
@@ -295,3 +285,4 @@ class SignupPage extends StatelessWidget {
     );
   }
 }
+O 
