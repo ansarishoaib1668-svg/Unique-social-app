@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const UniqueSocialApp());
+  runApp(const ViewgramApp());
 }
 
-class UniqueSocialApp extends StatelessWidget {
-  const UniqueSocialApp({super.key});
+class ViewgramApp extends StatelessWidget {
+  const ViewgramApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Unique Social',
+      title: 'Viewgram',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -26,74 +26,87 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
 
-                const Icon(
-                  Icons.people,
-                  size: 80,
-                  color: Colors.blue,
+              const Icon(
+                Icons.people,
+                size: 80,
+                color: Colors.blue,
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                "Welcome to Viewgram",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
 
-                const SizedBox(height: 20),
+              const SizedBox(height: 40),
 
-                const Text(
-                  "Welcome to Unique Social",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Login button clicked"),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(fontSize: 18),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginPage(),
                     ),
-                  ),
-                ),
+                  );
+                },
+                child: const Text("Login"),
+              ),
 
-                const SizedBox(height: 15),
+              const SizedBox(height: 15),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Create Account clicked"),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Create Account",
-                      style: TextStyle(fontSize: 18),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignupPage(),
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  );
+                },
+                child: const Text("Create Account"),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Viewgram Login")),
+      body: const Center(
+        child: Text("Login Page"),
+      ),
+    );
+  }
+}
+
+class SignupPage extends StatelessWidget {
+  const SignupPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Create Account")),
+      body: const Center(
+        child: Text("Create Account Page"),
       ),
     );
   }
