@@ -19,39 +19,71 @@ class ViewgramApp extends StatelessWidget {
     );
   }
 }
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xff0F2027),
+              Color(0xff203A43),
+              Color(0xff2C5364),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
 
-              const Icon(
-                Icons.people,
-                size: 80,
-                color: Colors.blue,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            Container(
+              height: 110,
+              width: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.15),
               ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                "Welcome to Viewgram",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: const Icon(
+                Icons.play_circle_fill_rounded,
+                size: 70,
+                color: Colors.white,
               ),
+            ),
 
-              const SizedBox(height: 40),
+            const SizedBox(height: 30),
 
-              ElevatedButton(
+            const Text(
+              "Welcome to Viewgram",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              "Connect • Share • Discover",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 60),
+
+            SizedBox(
+              width: 280,
+              height: 52,
+              child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -60,12 +92,19 @@ class HomePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("Login"),
+                child: const Text(
+                  "Login",
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
+            ),
 
-              const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
-              OutlinedButton(
+            SizedBox(
+              width: 280,
+              height: 52,
+              child: OutlinedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -74,10 +113,19 @@ class HomePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("Create Account"),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(
+                    color: Colors.white,
+                  ),
+                ),
+                child: const Text(
+                  "Create Account",
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -121,11 +169,11 @@ final passwordController = TextEditingController();
 
             TextField(
   controller: passwordController,
-  obscureText: hidePassword,
+ ”   obscureText: hidePassword,
   decoration: InputDecoration(
     labelText: "Password",
     border: const OutlineInputBorder(),
-    prefixIcon: const Icon(Icons.lock),
+   d prefixIcon: const Icon(Icons.lock),
     suffixIcon: IconButton(
       icon: Icon(
         hidePassword
