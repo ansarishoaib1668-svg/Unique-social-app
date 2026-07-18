@@ -167,11 +167,11 @@ final passwordController = TextEditingController();
 
             TextField(
   controller: passwordController,
- ”   obscureText: hidePassword,
+    obscureText: hidePassword,
   decoration: InputDecoration(
     labelText: "Password",
     border: const OutlineInputBorder(),
-   d prefixIcon: const Icon(Icons.lock),
+   prefixIcon: const Icon(Icons.lock),
     suffixIcon: IconButton(
       icon: Icon(
         hidePassword
