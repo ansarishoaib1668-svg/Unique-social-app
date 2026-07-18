@@ -94,7 +94,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool hidePassword = true;
   bool rememberMe = false;
-
+final usernameController = TextEditingController();
+final passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,12 +120,26 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 30),
 
             TextField(
-              decoration: InputDecoration(
-                labelText: "Username or Email",
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.person),
-              ),
-            ),
+  controller: passwordController,
+  obscureText: hidePassword,
+  decoration: InputDecoration(
+    labelText: "Password",
+    border: const OutlineInputBorder(),
+    prefixIcon: const Icon(Icons.lock),
+    suffixIcon: IconButton(
+      icon: Icon(
+        hidePassword
+            ? Icons.visibility_off
+            : Icons.visibility,
+      ),
+      onPressed: () {
+        setState(() {
+          hidePassword = !hidePassword;
+        });
+      },
+    ),
+  ),
+),
 
             const SizedBox(height: 15),
 
@@ -166,22 +181,37 @@ class _LoginPageState extends State<LoginPage> {
             ),
 
             Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                child: const Text("Forgot Password?"),
-              ),
-            ),
+  alignment: Alignment.centerRight,
+  child: TextButton(
+    onPressed: () {},
+    child: const Text("Forgot Password?"),
+  ),
+),
 
-            const SizedBox(height: 10),
+const SizedBox(height: 10),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text("Login"),
-              ),
-            ),
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: () {
+      if (usernameController.text == "admin" &&
+          passwordController.text == "123456") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login Successful"),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Wrong Username or Password"),
+          ),
+        );
+      }
+    },
+    child: const Text("Login"),
+  ),
+),
 
           ],
         ),
