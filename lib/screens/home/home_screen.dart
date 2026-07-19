@@ -99,7 +99,7 @@ class HomeScreen extends StatelessWidget {
 
       bottomNavigationBar: Container(
         color: Colors.black,
-        child: const BottomNavigationBar(
+        child: BottomNavigationBar(
           backgroundColor: Colors.black,
           type: BottomNavigationBarType.fixed,
           selectedItemColor: Colors.white,
