@@ -13,7 +13,7 @@ class ViewgramApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Viewgram',
-      theme: ThemeData.dark(),
+      theme: ThemeData.light(),
       home: const WelcomeScreen(),
     );
   }
