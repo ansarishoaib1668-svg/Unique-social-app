@@ -11,13 +11,9 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text(
-          "Viewgram",
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        title: Image.asset(
+          'assets/images/viewgram_logo.png',
+          height: 45,
         ),
         actions: const [
           Icon(Icons.favorite_border, color: Colors.white, size: 28),
