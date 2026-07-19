@@ -12,7 +12,7 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         elevation: 0,
         title: Image.asset(
-          'assets/images/20260719213230.png',
+          'assets/images/20260719213130.png',
           height: 42,
         ),
         actions: const [
