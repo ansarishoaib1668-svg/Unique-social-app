@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         title: Image.asset(
           'assets/images/viewgram_logo.png',
-          height: 42,
+          height: 45,
         ),
         actions: const [
           Icon(Icons.favorite_border, color: Colors.white, size: 28),
@@ -26,42 +26,44 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         children: [
 
+          // Stories
           SizedBox(
-            height: 115,
+            height: 110,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(12),
-              itemCount: 10,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: 8,
               itemBuilder: (context, index) {
                 return Container(
-                  width: 75,
-                  margin: const EdgeInsets.only(right: 12),
+                  margin: const EdgeInsets.only(right: 15),
                   child: Column(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              Colors.orange,
                               Colors.purple,
+                              Colors.orange,
                             ],
                           ),
                         ),
-                        child: const CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.black,
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 32,
+                        child: CircleAvatar(
+                          radius: 32,
+                          backgroundColor: Colors.grey[800],
+                          child: Text(
+                            "${index + 1}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        "User$index",
+                        "User${index + 1}",
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -86,45 +88,49 @@ class HomeScreen extends StatelessWidget {
 
           postCard(
             "Developer",
-            "Building social world 🌎",
+            "Building a new social world 🌎",
           ),
         ],
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
+      bottomNavigationBar: Container(
+        color: Colors.black,
+        child: BottomNavigationBar(
+          backgroundColor: Colors.black,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.grey,
 
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_box_outlined),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "",
-          ),
-        ],
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_box_outlined),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_border),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: "",
+            ),
+          ],
+        ),
       ),
     );
   }
 
 
   Widget postCard(String user, String caption) {
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -152,16 +158,18 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
 
+
         Container(
-          height: 330,
+          height: 320,
           width: double.infinity,
           color: Colors.grey[900],
           child: const Icon(
-            Icons.image_outlined,
+            Icons.image,
             size: 90,
             color: Colors.grey,
           ),
         ),
+
 
         const Padding(
           padding: EdgeInsets.all(12),
@@ -175,16 +183,17 @@ class HomeScreen extends StatelessWidget {
 
               Icon(Icons.chat_bubble_outline,
                   color: Colors.white,
-                  size: 27),
+                  size: 26),
 
               SizedBox(width: 18),
 
               Icon(Icons.send_outlined,
                   color: Colors.white,
-                  size: 27),
+                  size: 26),
             ],
           ),
         ),
+
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -197,8 +206,8 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 15),
       ],
     );
   }
-}
+} 
