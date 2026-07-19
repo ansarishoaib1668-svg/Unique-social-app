@@ -11,14 +11,20 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: Image.asset(
-          'assets/images/20260719213130.png',
-          height: 42,
+        title: const Text(
+          'Vɪᴇᴡɢʀᴀᴍ ✦',
+          style: TextStyle(
+            color: Colors.purpleAccent,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
         ),
+        centerTitle: true,
         actions: const [
-          Icon(Icons.favorite_border, color: Colors.white, size: 28),
+          Icon(Icons.favorite_border, color: Colors.purpleAccent, size: 28),
           SizedBox(width: 18),
-          Icon(Icons.send_outlined, color: Colors.white, size: 26),
+          Icon(Icons.send_outlined, color: Colors.purpleAccent, size: 26),
           SizedBox(width: 15),
         ],
       ),
@@ -54,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                           backgroundColor: Colors.black,
                           child: Icon(
                             Icons.person,
-                            color: Colors.white,
+                            color: Colors.purpleAccent,
                             size: 32,
                           ),
                         ),
@@ -63,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         "User$index",
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.purpleAccent,
                           fontSize: 12,
                         ),
                       ),
@@ -134,21 +140,21 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: Colors.purple,
             child: Icon(
               Icons.person,
-              color: Colors.white,
+              color: Colors.purpleAccent,
             ),
           ),
 
           title: Text(
             user,
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.purpleAccent,
               fontWeight: FontWeight.bold,
             ),
           ),
 
           trailing: const Icon(
             Icons.more_vert,
-            color: Colors.white,
+            color: Colors.purpleAccent,
           ),
         ),
 
@@ -168,19 +174,19 @@ class HomeScreen extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.favorite_border,
-                  color: Colors.white,
+                  color: Colors.purpleAccent,
                   size: 28),
 
               SizedBox(width: 18),
 
               Icon(Icons.chat_bubble_outline,
-                  color: Colors.white,
+                  color: Colors.purpleAccent,
                   size: 27),
 
               SizedBox(width: 18),
 
               Icon(Icons.send_outlined,
-                  color: Colors.white,
+                  color: Colors.purpleAccent,
                   size: 27),
             ],
           ),
@@ -191,7 +197,7 @@ class HomeScreen extends StatelessWidget {
           child: Text(
             caption,
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.purpleAccent,
               fontSize: 16,
             ),
           ),
