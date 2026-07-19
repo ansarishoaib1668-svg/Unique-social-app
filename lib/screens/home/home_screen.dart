@@ -6,15 +6,15 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
 
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Vɪᴇᴡɢʀᴀᴍ ✦',
           style: TextStyle(
-            color: Colors.purpleAccent,
+            color: Colors.whiteAccent,
             fontSize: 28,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
@@ -22,9 +22,9 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: const [
-          Icon(Icons.favorite_border, color: Colors.purpleAccent, size: 28),
+          Icon(Icons.favorite_border, color: Colors.whiteAccent, size: 28),
           SizedBox(width: 18),
-          Icon(Icons.send_outlined, color: Colors.purpleAccent, size: 26),
+          Icon(Icons.send_outlined, color: Colors.whiteAccent, size: 26),
           SizedBox(width: 15),
         ],
       ),
@@ -51,16 +51,16 @@ class HomeScreen extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: [
                               Colors.orange,
-                              Colors.purple,
+                              Colors.white,
                             ],
                           ),
                         ),
                         child: const CircleAvatar(
                           radius: 30,
-                          backgroundColor: Colors.black,
+                          backgroundColor: Colors.white,
                           child: Icon(
                             Icons.person,
-                            color: Colors.purpleAccent,
+                            color: Colors.whiteAccent,
                             size: 32,
                           ),
                         ),
@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         "User$index",
                         style: const TextStyle(
-                          color: Colors.purpleAccent,
+                          color: Colors.whiteAccent,
                           fontSize: 12,
                         ),
                       ),
@@ -98,7 +98,7 @@ class HomeScreen extends StatelessWidget {
       ),
 
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,
@@ -137,24 +137,24 @@ class HomeScreen extends StatelessWidget {
 
         ListTile(
           leading: const CircleAvatar(
-            backgroundColor: Colors.purple,
+            backgroundColor: Colors.white,
             child: Icon(
               Icons.person,
-              color: Colors.purpleAccent,
+              color: Colors.whiteAccent,
             ),
           ),
 
           title: Text(
             user,
             style: const TextStyle(
-              color: Colors.purpleAccent,
+              color: Colors.whiteAccent,
               fontWeight: FontWeight.bold,
             ),
           ),
 
           trailing: const Icon(
             Icons.more_vert,
-            color: Colors.purpleAccent,
+            color: Colors.whiteAccent,
           ),
         ),
 
@@ -174,19 +174,19 @@ class HomeScreen extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.favorite_border,
-                  color: Colors.purpleAccent,
+                  color: Colors.whiteAccent,
                   size: 28),
 
               SizedBox(width: 18),
 
               Icon(Icons.chat_bubble_outline,
-                  color: Colors.purpleAccent,
+                  color: Colors.whiteAccent,
                   size: 27),
 
               SizedBox(width: 18),
 
               Icon(Icons.send_outlined,
-                  color: Colors.purpleAccent,
+                  color: Colors.whiteAccent,
                   size: 27),
             ],
           ),
@@ -197,7 +197,7 @@ class HomeScreen extends StatelessWidget {
           child: Text(
             caption,
             style: const TextStyle(
-              color: Colors.purpleAccent,
+              color: Colors.whiteAccent,
               fontSize: 16,
             ),
           ),
