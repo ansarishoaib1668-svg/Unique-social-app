@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -211,10 +212,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
               GestureDetector(
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Comment feature coming soon"),
-                    ),
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: "Write a comment...",
+                            border: OutlineInputBorder(),
+                          ),
+                          onSubmitted: (value) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Comment added: $value")),
+                            );
+                          },
+                        ),
+                      );
+                    },
                   );
                 },
                 child: const Text(
@@ -227,10 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               GestureDetector(
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Share button clicked"),
-                    ),
+                  Share.share(
+                    "Check out this post on Viewgram 🚀",
                   );
                 },
                 child: const Text(
