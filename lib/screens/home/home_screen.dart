@@ -86,17 +86,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          PostCard(
+          postCard(
             "Shaad",
             "Welcome to Viewgram 🚀",
           ),
 
-          PostCard(
+          postCard(
             "Creator",
             "Share your moments ✨",
           ),
 
-          PostCard(
+          postCard(
             "Developer",
             "Building social world 🌎",
           ),
@@ -136,32 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-
-}
-class PostCard extends StatefulWidget {
-  final String user;
-  final String caption;
-
-  const PostCard(this.user, this.caption, {super.key});
-
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
-
-class _PostCardState extends State<PostCard> {
-  bool liked = false;
-  int feels = 0;
-  final List<String> comments = [];
-
-  void addComment(String text) {
-    if (text.trim().isEmpty) return;
-    setState(() {
-      comments.add(text.trim());
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget postCard(String user, String caption) {
+    bool liked = false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,16 +145,24 @@ class _PostCardState extends State<PostCard> {
         ListTile(
           leading: const CircleAvatar(
             backgroundColor: Colors.white,
-            child: Icon(Icons.person, color: Colors.black),
+            child: Icon(
+              Icons.person,
+              color: Colors.black,
+            ),
           ),
+
           title: Text(
-            widget.user,
+            user,
             style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-          trailing: const Icon(Icons.more_vert, color: Colors.black),
+
+          trailing: const Icon(
+            Icons.more_vert,
+            color: Colors.black,
+          ),
         ),
 
         Container(
@@ -192,66 +176,62 @@ class _PostCardState extends State<PostCard> {
           ),
         ),
 
-        Row(
-          children: [
-            TextButton.icon(
-              onPressed: () {
-                final controller = TextEditingController();
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    liked = !liked;
+                  });
+                },
+                child: Icon(
+                  liked
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: liked
+                      ? Colors.red
+                      : Colors.black,
+                  size: 28,
+                ),
+              ),
 
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Comment"),
-                    content: TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(
-                        hintText: "Write comment..."
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          addComment(controller.text);
-                          Navigator.pop(context);
-                        },
-                        child: const Text("Post"),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.chat_bubble_outline,
-                  color: Colors.black),
-              label: const Text("Comment",
-                  style: TextStyle(color: Colors.black)),
-            ),
+              const SizedBox(width: 6),
 
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.send_outlined,
-                  color: Colors.black),
-              label: const Text("Share",
-                  style: TextStyle(color: Colors.black)),
-            ),
-          ],
-        ),
+              Text(
+                liked ? "Feel ❤️" : "Feel ♡",
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
-        Text(
-          widget.caption,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 16,
+              const SizedBox(width: 18),
+
+              Icon(Icons.chat_bubble_outline,
+                  color: Colors.black,
+                  size: 27),
+
+              SizedBox(width: 18),
+
+              Icon(Icons.send_outlined,
+                  color: Colors.black,
+                  size: 27),
+            ],
           ),
         ),
 
-        for (var c in comments)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Text(
-              "💬 $c",
-              style: const TextStyle(color: Colors.black),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            caption,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
             ),
           ),
+        ),
 
         const SizedBox(height: 18),
       ],
