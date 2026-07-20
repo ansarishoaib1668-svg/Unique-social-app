@@ -7,11 +7,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
 
       appBar: AppBar(
         backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
         elevation: 0,
         title: const Text(
           'Vɪᴇᴡɢʀᴀᴍ ✦',
@@ -60,7 +58,6 @@ class HomeScreen extends StatelessWidget {
                         child: const CircleAvatar(
                           radius: 30,
                           backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
                           child: Icon(
                             Icons.person,
                             color: Colors.black,
@@ -102,7 +99,6 @@ class HomeScreen extends StatelessWidget {
 
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.purple,
         unselectedItemColor: Colors.grey,
@@ -142,7 +138,6 @@ class HomeScreen extends StatelessWidget {
         ListTile(
           leading: const CircleAvatar(
             backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
             child: Icon(
               Icons.person,
               color: Colors.black,
