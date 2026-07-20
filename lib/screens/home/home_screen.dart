@@ -7,14 +7,16 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+        unselectedItemColor: Colors.grey,
 
       appBar: AppBar(
         backgroundColor: Colors.white,
+        unselectedItemColor: Colors.grey,
         elevation: 0,
         title: const Text(
           'Vɪᴇᴡɢʀᴀᴍ ✦',
           style: TextStyle(
-            color: Colors.whiteAccent,
+            color: Colors.black,
             fontSize: 28,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
@@ -22,9 +24,9 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: const [
-          Icon(Icons.favorite_border, color: Colors.whiteAccent, size: 28),
+          Icon(Icons.favorite_border, color: Colors.black, size: 28),
           SizedBox(width: 18),
-          Icon(Icons.send_outlined, color: Colors.whiteAccent, size: 26),
+          Icon(Icons.send_outlined, color: Colors.black, size: 26),
           SizedBox(width: 15),
         ],
       ),
@@ -58,9 +60,10 @@ class HomeScreen extends StatelessWidget {
                         child: const CircleAvatar(
                           radius: 30,
                           backgroundColor: Colors.white,
+        unselectedItemColor: Colors.grey,
                           child: Icon(
                             Icons.person,
-                            color: Colors.whiteAccent,
+                            color: Colors.black,
                             size: 32,
                           ),
                         ),
@@ -69,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         "User$index",
                         style: const TextStyle(
-                          color: Colors.whiteAccent,
+                          color: Colors.black,
                           fontSize: 12,
                         ),
                       ),
@@ -99,8 +102,9 @@ class HomeScreen extends StatelessWidget {
 
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.white,
+        selectedItemColor: Colors.purple,
         unselectedItemColor: Colors.grey,
 
         items: const [
@@ -138,23 +142,24 @@ class HomeScreen extends StatelessWidget {
         ListTile(
           leading: const CircleAvatar(
             backgroundColor: Colors.white,
+        unselectedItemColor: Colors.grey,
             child: Icon(
               Icons.person,
-              color: Colors.whiteAccent,
+              color: Colors.black,
             ),
           ),
 
           title: Text(
             user,
             style: const TextStyle(
-              color: Colors.whiteAccent,
+              color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
 
           trailing: const Icon(
             Icons.more_vert,
-            color: Colors.whiteAccent,
+            color: Colors.black,
           ),
         ),
 
@@ -174,19 +179,19 @@ class HomeScreen extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.favorite_border,
-                  color: Colors.whiteAccent,
+                  color: Colors.black,
                   size: 28),
 
               SizedBox(width: 18),
 
               Icon(Icons.chat_bubble_outline,
-                  color: Colors.whiteAccent,
+                  color: Colors.black,
                   size: 27),
 
               SizedBox(width: 18),
 
               Icon(Icons.send_outlined,
-                  color: Colors.whiteAccent,
+                  color: Colors.black,
                   size: 27),
             ],
           ),
@@ -197,7 +202,7 @@ class HomeScreen extends StatelessWidget {
           child: Text(
             caption,
             style: const TextStyle(
-              color: Colors.whiteAccent,
+              color: Colors.black,
               fontSize: 16,
             ),
           ),
