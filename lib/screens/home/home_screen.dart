@@ -9,6 +9,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool liked = false;
+  int feelCount = 0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Widget postCard(String user, String caption) {
-    bool liked = false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -185,23 +187,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   setState(() {
                     liked = !liked;
+
+                    if (liked) {
+                      feelCount++;
+                    } else {
+                      feelCount--;
+                    }
                   });
                 },
-                child: Icon(
-                  liked
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: liked
-                      ? Colors.red
-                      : Colors.black,
-                  size: 28,
+                child: AnimatedScale(
+                  scale: liked ? 1.2 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    liked
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: liked
+                        ? Colors.red
+                        : Colors.black,
+                    size: 28,
+                  ),
                 ),
               ),
 
               const SizedBox(width: 6),
 
               Text(
-                liked ? "Feel ❤️" : "Feel ♡",
+                liked ? "♥ Feel $feelCount" : "♡ Feel $feelCount",
                 style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
