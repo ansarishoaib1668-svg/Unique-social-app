@@ -1,17 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool liked = false;
-  int feelCount = 0;
-
 
   @override
   Widget build(BuildContext context) {
@@ -27,146 +18,82 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.black,
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
           ),
         ),
         centerTitle: true,
-        actions: const [
-          Icon(Icons.favorite_border, color: Colors.black, size: 28),
-          SizedBox(width: 18),
-          Icon(Icons.send_outlined, color: Colors.black, size: 26),
-          SizedBox(width: 15),
-        ],
       ),
 
       body: ListView(
-        children: [
-
-          SizedBox(
-            height: 115,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(12),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Container(
-                  width: 75,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.orange,
-                              Colors.white,
-                            ],
-                          ),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.black,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "User$index",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+        children: const [
+          PostCard(
+            user: "Shaad",
+            caption: "Welcome to Viewgram 🚀",
           ),
-
-          postCard(
-            "Shaad",
-            "Welcome to Viewgram 🚀",
+          PostCard(
+            user: "Creator",
+            caption: "Share your moments ✨",
           ),
-
-          postCard(
-            "Creator",
-            "Share your moments ✨",
-          ),
-
-          postCard(
-            "Developer",
-            "Building social world 🌎",
-          ),
-        ],
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.purple,
-        unselectedItemColor: Colors.grey,
-
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_box_outlined),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "",
+          PostCard(
+            user: "Developer",
+            caption: "Building social world 🌎",
           ),
         ],
       ),
     );
   }
+}
 
 
-  Widget postCard(String user, String caption) {
+class PostCard extends StatefulWidget {
+  final String user;
+  final String caption;
+
+  const PostCard({
+    super.key,
+    required this.user,
+    required this.caption,
+  });
+
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+
+class _PostCardState extends State<PostCard> {
+
+  bool liked = false;
+  int feelCount = 0;
+  final List<String> comments = [];
+
+
+  void addComment(String text) {
+    if (text.trim().isEmpty) return;
+
+    setState(() {
+      comments.add(text);
+    });
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+
       children: [
 
         ListTile(
           leading: const CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(
-              Icons.person,
-              color: Colors.black,
-            ),
+            child: Icon(Icons.person),
           ),
-
           title: Text(
-            user,
+            widget.user,
             style: const TextStyle(
-              color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-
-          trailing: const Icon(
-            Icons.more_vert,
-            color: Colors.black,
-          ),
         ),
+
 
         Container(
           height: 330,
@@ -179,114 +106,178 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
+
         Padding(
           padding: const EdgeInsets.all(12),
+
           child: Row(
             children: [
+
               GestureDetector(
                 onTap: () {
+
                   setState(() {
+
                     liked = !liked;
 
-                    if (liked) {
-                      feelCount++;
-                    } else {
-                      feelCount--;
-                    }
-                  });
-                },
-                child: AnimatedScale(
-                  scale: liked ? 1.2 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
                     liked
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    color: liked
-                        ? Colors.red
-                        : Colors.black,
-                    size: 28,
-                  ),
+                        ? feelCount++
+                        : feelCount--;
+
+                  });
+
+                },
+
+                child: Icon(
+                  liked
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+
+                  color: liked
+                      ? Colors.red
+                      : Colors.black,
+
+                  size: 30,
                 ),
               ),
 
+
               const SizedBox(width: 6),
 
+
               Text(
-                liked ? "♥ Feel $feelCount" : "♡ Feel $feelCount",
+                "Feel $feelCount",
                 style: const TextStyle(
-                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(width: 18),
+
+              const SizedBox(width: 20),
+
 
               GestureDetector(
+
                 onTap: () {
+
                   showModalBottomSheet(
-                    isScrollControlled: true,
+
                     context: context,
+
+                    isScrollControlled: true,
+
                     builder: (context) {
+
+                      final controller =
+                          TextEditingController();
+
+
                       return Padding(
+
                         padding: EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                          left: 15,
+                          right: 15,
+                          bottom: MediaQuery.of(context)
+                              .viewInsets
+                              .bottom + 15,
                         ),
+
                         child: TextField(
+
+                          controller: controller,
+
+                          autofocus: true,
+
                           decoration: const InputDecoration(
-                            hintText: "Write a comment...",
-                            border: OutlineInputBorder(),
+                            hintText:
+                            "Write a comment...",
                           ),
+
                           onSubmitted: (value) {
+
+                            addComment(value);
+
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Comment added: $value")),
-                            );
+
                           },
+
                         ),
+
                       );
                     },
                   );
+
                 },
-                child: const Text(
-                  "💬",
-                  style: TextStyle(fontSize: 27),
+
+
+                child: Text(
+                  "💬 ${comments.length}",
+                  style: const TextStyle(
+                    fontSize: 22,
+                  ),
                 ),
               ),
 
-              const SizedBox(width: 18),
+
+              const SizedBox(width: 20),
+
 
               GestureDetector(
+
                 onTap: () {
+
                   Share.share(
                     "Check out this post on Viewgram 🚀",
                   );
+
                 },
+
                 child: const Text(
                   "🚀",
-                  style: TextStyle(fontSize: 27),
+                  style: TextStyle(
+                    fontSize: 25,
+                  ),
                 ),
+
               ),
+
             ],
           ),
         ),
 
+
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+
+          padding:
+          const EdgeInsets.symmetric(horizontal: 12),
+
           child: Text(
-            caption,
+            widget.caption,
             style: const TextStyle(
-              color: Colors.black,
               fontSize: 16,
+            ),
+          ),
+
+        ),
+
+
+        ...comments.map(
+              (c) => Padding(
+            padding:
+            const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 4,
+            ),
+            child: Text(
+              "💬 $c",
             ),
           ),
         ),
 
-        const SizedBox(height: 18),
+
+        const SizedBox(height: 20),
+
       ],
     );
   }
 }
-
