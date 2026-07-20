@@ -196,28 +196,11 @@ class _PostCardState extends State<PostCard> {
           children: [
             TextButton.icon(
               onPressed: () {
-                setState(() {
-                  liked = !liked;
-                  feels += liked ? 1 : -1;
-                });
-              },
-              icon: Icon(
-                Icons.favorite,
-                color: liked ? Colors.red : Colors.black,
-              ),
-              label: Text(
-                "Feel $feels",
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-
-            TextButton.icon(
-              onPressed: () {
                 final controller = TextEditingController();
 
                 showDialog(
                   context: context,
-                  builder: (_) => AlertDialog(
+                  builder: (context) => AlertDialog(
                     title: const Text("Comment"),
                     content: TextField(
                       controller: controller,
@@ -232,7 +215,7 @@ class _PostCardState extends State<PostCard> {
                           Navigator.pop(context);
                         },
                         child: const Text("Post"),
-                      )
+                      ),
                     ],
                   ),
                 );
@@ -244,13 +227,7 @@ class _PostCardState extends State<PostCard> {
             ),
 
             TextButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Share option coming soon 🚀"),
-                  ),
-                );
-              },
+              onPressed: () {},
               icon: const Icon(Icons.send_outlined,
                   color: Colors.black),
               label: const Text("Share",
