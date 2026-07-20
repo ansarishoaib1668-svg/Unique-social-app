@@ -225,10 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
               GestureDetector(
                 onTap: () {
                   showModalBottomSheet(
+                    isScrollControlled: true,
                     context: context,
                     builder: (context) {
                       return Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                        ),
                         child: TextField(
                           decoration: const InputDecoration(
                             hintText: "Write a comment...",
