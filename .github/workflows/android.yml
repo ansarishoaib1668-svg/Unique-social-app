@@ -12,11 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.21.0
         with:
-          flutter-version: '3.44.7'
+          channel: stable
+          flutter-version: 3.44.7
 
       - run: flutter --version
+      - run: dart --version
       - run: flutter pub get
       - run: flutter build apk --release
 
