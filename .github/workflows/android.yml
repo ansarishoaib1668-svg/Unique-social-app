@@ -2,8 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -15,10 +14,10 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.0'
+          flutter-version: '3.44.7'
 
+      - run: flutter --version
       - run: flutter pub get
-
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
