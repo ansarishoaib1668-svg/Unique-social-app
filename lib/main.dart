@@ -1,3 +1,4 @@
+import 'screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -22,7 +23,7 @@ class ViewgramApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Viewgram',
       theme: ThemeData.light(),
-      home: const WelcomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
