@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "13748084728",
+    "project_id": "viewgram-7802e",
+    "storage_bucket": "viewgram-7802e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:13748084728:android:b8d46d554d6b63c9c2800d",
+        "android_client_info": {
+          "package_name": "com.example.unique_social_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFGl5dLC_8fBydZGqp9k1XSB_2jPdgpUA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
