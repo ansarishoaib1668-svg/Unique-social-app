@@ -18,18 +18,17 @@ class _LoginScreenState extends State<LoginScreen> {
   void login() {
     if (usernameController.text == "shoaib" &&
         passwordController.text == "908070") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Successful")),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(),
+        ),
       );
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
-      ),
-    );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid Username or Password")),
+        const SnackBar(
+          content: Text("Invalid Username or Password"),
+        ),
       );
     }
   }
@@ -42,62 +41,71 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xff0f2027),
-              Color(0xff203a43),
-              Color(0xff2c5364),
+              Color(0xff0F0F12),
+              Color(0xff24104F),
+              Color(0xff111827),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
             child: Column(
               children: [
+
+                Image.asset(
+                  'lib/assets/images/viewgram_logo.png',
+                  height: 120,
+                ),
+
+                const SizedBox(height: 15),
+
                 const Text(
-                  "VIEWGRAM",
+                  "Viewgram",
                   style: TextStyle(
-                    fontSize: 36,
+                    color: Colors.white,
+                    fontSize: 34,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 3,
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 const Text(
                   "Welcome Back 👋",
-                  style: TextStyle(fontSize: 22),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 20,
+                  ),
                 ),
 
                 const SizedBox(height: 40),
 
                 TextField(
                   controller: usernameController,
-                  decoration: InputDecoration(
-                    hintText: "Username",
-                    prefixIcon: const Icon(Icons.person),
-                    filled: true,
-                    fillColor: Colors.white12,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: inputStyle(
+                    "Username",
+                    Icons.person,
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
                 TextField(
                   controller: passwordController,
                   obscureText: hidePassword,
-                  decoration: InputDecoration(
-                    hintText: "Password",
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: inputStyle(
+                    "Password",
+                    Icons.lock,
+                    suffix: IconButton(
                       icon: Icon(
                         hidePassword
                             ? Icons.visibility_off
                             : Icons.visibility,
+                        color: Colors.white,
                       ),
                       onPressed: () {
                         setState(() {
@@ -105,29 +113,54 @@ class _LoginScreenState extends State<LoginScreen> {
                         });
                       },
                     ),
-                    filled: true,
-                    fillColor: Colors.white12,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(color: Colors.blueAccent),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 15),
 
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
                     onPressed: login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
                     child: const Text(
                       "LOGIN",
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 20),
+
+                OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.g_mobiledata),
+                  label: const Text("Continue with Google"),
+                ),
+
+                const SizedBox(height: 25),
 
                 TextButton(
                   onPressed: () {
@@ -140,12 +173,32 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text(
                     "Don't have an account? Sign Up",
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
+
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration inputStyle(
+    String hint,
+    IconData icon, {
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white54),
+      prefixIcon: Icon(icon, color: Colors.white),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: Colors.white12,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25),
       ),
     );
   }
