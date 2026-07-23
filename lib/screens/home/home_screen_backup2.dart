@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Widget postCard(String user, String caption) {
-    bool liked = false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -176,38 +169,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        Padding(
-          padding: const EdgeInsets.all(12),
+        const Padding(
+          padding: EdgeInsets.all(12),
           child: Row(
             children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    liked = !liked;
-                  });
-                },
-                child: Icon(
-                  liked
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: liked
-                      ? Colors.red
-                      : Colors.black,
-                  size: 28,
-                ),
-              ),
-
-              const SizedBox(width: 6),
-
-              Text(
-                liked ? "Feel ❤️" : "Feel ♡",
-                style: const TextStyle(
+              Icon(Icons.favorite_border,
                   color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                  size: 28),
 
-              const SizedBox(width: 18),
+              SizedBox(width: 18),
 
               Icon(Icons.chat_bubble_outline,
                   color: Colors.black,
@@ -238,4 +208,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

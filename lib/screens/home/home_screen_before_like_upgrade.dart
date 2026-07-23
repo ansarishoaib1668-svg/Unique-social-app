@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -209,15 +210,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(width: 18),
 
-              Icon(Icons.chat_bubble_outline,
-                  color: Colors.black,
-                  size: 27),
+              GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: "Write a comment...",
+                            border: OutlineInputBorder(),
+                          ),
+                          onSubmitted: (value) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Comment added: $value")),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: const Text(
+                  "💬",
+                  style: TextStyle(fontSize: 27),
+                ),
+              ),
 
-              SizedBox(width: 18),
+              const SizedBox(width: 18),
 
-              Icon(Icons.send_outlined,
-                  color: Colors.black,
-                  size: 27),
+              GestureDetector(
+                onTap: () {
+                  Share.share(
+                    "Check out this post on Viewgram 🚀",
+                  );
+                },
+                child: const Text(
+                  "🚀",
+                  style: TextStyle(fontSize: 27),
+                ),
+              ),
             ],
           ),
         ),

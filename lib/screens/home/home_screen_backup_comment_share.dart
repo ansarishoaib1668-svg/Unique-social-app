@@ -209,15 +209,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(width: 18),
 
-              Icon(Icons.chat_bubble_outline,
-                  color: Colors.black,
-                  size: 27),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Comment feature coming soon"),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "💬",
+                  style: TextStyle(fontSize: 27),
+                ),
+              ),
 
-              SizedBox(width: 18),
+              const SizedBox(width: 18),
 
-              Icon(Icons.send_outlined,
-                  color: Colors.black,
-                  size: 27),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Share button clicked"),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "🚀",
+                  style: TextStyle(fontSize: 27),
+                ),
+              ),
             ],
           ),
         ),
