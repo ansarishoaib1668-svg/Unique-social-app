@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "13748084728",
+    "firebase_url": "https://viewgram-7802e-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "viewgram-7802e",
     "storage_bucket": "viewgram-7802e.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.unique_social_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "13748084728-54s0enc3q4iq77bvgcle66jjlvkfdshs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.unique_social_app",
+            "certificate_hash": "bdbc31e3ef6033fb1aedf509935a72a14bd37c36"
+          }
+        },
+        {
+          "client_id": "13748084728-op39j7v5mvm7oan4g41rq9lkl3n6rm0o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAFGl5dLC_8fBydZGqp9k1XSB_2jPdgpUA"
@@ -20,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "13748084728-op39j7v5mvm7oan4g41rq9lkl3n6rm0o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "13748084728-vlft1jtviinfco189inlkds5m6ejtr30.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.uniqueSocialApp"
+              }
+            }
+          ]
         }
       }
     }
