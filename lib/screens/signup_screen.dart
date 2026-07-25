@@ -10,130 +10,108 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-
   final nameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final otpController = TextEditingController();
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  String verificationId = "";
-  bool otpSent = false;
-  bool otpVerified = false;
   bool loading = false;
   bool hidePassword = true;
-
-  Future<void> sendOTP() async {
-    String phone = phoneController.text.trim();
-
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter phone number")),
-      );
-      return;
-    }
-
-    setState(() => loading = true);
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: "+91$phone",
-
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        setState(() {
-          otpVerified = true;
-        });
-      },
-
-      verificationFailed: (FirebaseAuthException e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? "OTP failed")),
-        );
-      },
-
-      codeSent: (String id, int? resendToken) {
-        setState(() {
-          verificationId = id;
-          otpSent = true;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("OTP sent")),
-        );
-      },
-
-      codeAutoRetrievalTimeout: (String id) {
-        verificationId = id;
-      },
-    );
-
-    setState(() => loading = false);
-  }
-
-
-  Future<void> verifyOTP() async {
-    try {
-
-      PhoneAuthCredential credential =
-          PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: otpController.text.trim(),
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      setState(() {
-        otpVerified = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Phone verified")),
-      );
-
-    } catch (e) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid OTP")),
-      );
-
-    }
-  }
-
+  bool hideConfirmPassword = true;
 
   Future<void> createAccount() async {
+    final name = nameController.text.trim();
+    final username = usernameController.text.trim().toLowerCase();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
 
-    if (!otpVerified) {
+    if (name.isEmpty ||
+        username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Verify phone first")),
+        const SnackBar(content: Text("Please fill all fields")),
       );
       return;
     }
 
+    if (username.startsWith('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Enter username without @"),
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Username must be 3-20 characters using letters, numbers or _",
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password must be at least 6 characters"),
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
 
     setState(() => loading = true);
 
     try {
+      final usernameQuery = await FirebaseFirestore.instance
+          .collection("users")
+          .where("username", isEqualTo: username)
+          .limit(1)
+          .get();
 
-      UserCredential user =
-          await FirebaseAuth.instance
-              .createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      if (usernameQuery.docs.isNotEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Username already taken")),
+          );
+        }
+        setState(() => loading = false);
+        return;
+      }
+
+      final userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: email,
+        password: password,
       );
 
+      final uid = userCredential.user!.uid;
 
       await FirebaseFirestore.instance
           .collection("users")
-          .doc(user.user!.uid)
+          .doc(uid)
           .set({
-
-        "name": nameController.text.trim(),
-        "phone": phoneController.text.trim(),
-        "email": emailController.text.trim(),
+        "name": name,
+        "username": username,
+        "email": email,
         "createdAt": FieldValue.serverTimestamp(),
-
       });
 
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -141,110 +119,93 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       );
 
-
       Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
 
+      String message = "Signup failed";
 
-    } on FirebaseAuthException catch(e){
+      if (e.code == "email-already-in-use") {
+        message = "This email is already registered";
+      } else if (e.code == "invalid-email") {
+        message = "Please enter a valid email";
+      } else if (e.code == "weak-password") {
+        message = "Password is too weak";
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? "Signup failed")),
+        SnackBar(content: Text(message)),
       );
+    } catch (e) {
+      if (!mounted) return;
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Something went wrong. Please try again."),
+        ),
+      );
     }
 
-
-    setState(() => loading = false);
-
+    if (mounted) {
+      setState(() => loading = false);
+    }
   }
 
-
+  @override
+  void dispose() {
+    nameController.dispose();
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
         title: const Text("Create Account"),
       ),
-
       body: SingleChildScrollView(
-
         padding: const EdgeInsets.all(20),
-
         child: Column(
-
           children: [
-
-
             TextField(
               controller: nameController,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                 labelText: "Name",
                 border: OutlineInputBorder(),
               ),
             ),
 
-            const SizedBox(height:15),
-
+            const SizedBox(height: 15),
 
             TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
+              controller: usernameController,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
-                labelText: "Phone Number",
-                prefixText: "+91 ",
+                labelText: "Username",
+                prefixText: "@",
+                hintText: "your_username",
                 border: OutlineInputBorder(),
               ),
             ),
 
-
-            const SizedBox(height:10),
-
-
-            ElevatedButton(
-              onPressed: loading ? null : sendOTP,
-              child: const Text("SEND OTP"),
-            ),
-
-
-
-            if(otpSent)...[
-
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "OTP",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height:10),
-
-              ElevatedButton(
-                onPressed: verifyOTP,
-                child: const Text("VERIFY OTP"),
-              ),
-
-            ],
-
-
-            const SizedBox(height:20),
-
+            const SizedBox(height: 15),
 
             TextField(
               controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(),
               ),
             ),
 
-
-            const SizedBox(height:15),
-
+            const SizedBox(height: 15),
 
             TextField(
               controller: passwordController,
@@ -252,44 +213,55 @@ class _SignupScreenState extends State<SignupScreen> {
               decoration: InputDecoration(
                 labelText: "Password",
                 border: const OutlineInputBorder(),
-
                 suffixIcon: IconButton(
                   icon: Icon(
                     hidePassword
-                    ? Icons.visibility_off
-                    : Icons.visibility,
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                   ),
-
-                  onPressed: (){
+                  onPressed: () {
                     setState(() {
-                      hidePassword=!hidePassword;
+                      hidePassword = !hidePassword;
                     });
                   },
                 ),
               ),
             ),
 
+            const SizedBox(height: 15),
 
-            const SizedBox(height:20),
+            TextField(
+              controller: confirmPasswordController,
+              obscureText: hideConfirmPassword,
+              decoration: InputDecoration(
+                labelText: "Confirm Password",
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hideConfirmPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      hideConfirmPassword = !hideConfirmPassword;
+                    });
+                  },
+                ),
+              ),
+            ),
 
+            const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
-
               child: ElevatedButton(
-
-                onPressed:
-                loading ? null : createAccount,
-
+                onPressed: loading ? null : createAccount,
                 child: Text(
-                  loading
-                  ? "Please wait..."
-                  : "CREATE ACCOUNT",
+                  loading ? "Please wait..." : "CREATE ACCOUNT",
                 ),
-
               ),
-            )
-
+            ),
           ],
         ),
       ),
