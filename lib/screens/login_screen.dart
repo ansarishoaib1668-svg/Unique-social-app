@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_screen.dart';
 import 'home/home_screen.dart';
 
@@ -10,195 +11,112 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool hidePassword = true;
+  bool loading = false;
 
-  void login() {
-    if (usernameController.text == "shoaib" &&
-        passwordController.text == "908070") {
+  Future<void> login() async {
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter email and password"),
+        ),
+      );
+      return;
+    }
+
+    setState(() => loading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => const HomeScreen(),
         ),
       );
-    } else {
+    } on FirebaseAuthException catch (e) {
+      String message = e.message ?? "Login failed";
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Invalid Username or Password"),
-        ),
+        SnackBar(content: Text(message)),
       );
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xff0F0F12),
-              Color(0xff24104F),
-              Color(0xff111827),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-
-                Image.asset(
-                  'lib/assets/images/viewgram_logo.png',
-                  height: 120,
-                ),
-
-                const SizedBox(height: 15),
-
-                const Text(
-                  "Viewgram",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-                  "Welcome Back 👋",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 20,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                TextField(
-                  controller: usernameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: inputStyle(
-                    "Username",
-                    Icons.person,
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                TextField(
-                  controller: passwordController,
-                  obscureText: hidePassword,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: inputStyle(
-                    "Password",
-                    Icons.lock,
-                    suffix: IconButton(
-                      icon: Icon(
-                        hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      "Forgot Password?",
-                      style: TextStyle(color: Colors.blueAccent),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      "LOGIN",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.g_mobiledata),
-                  label: const Text("Continue with Google"),
-                ),
-
-                const SizedBox(height: 25),
-
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SignupScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Don't have an account? Sign Up",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-
-              ],
+      appBar: AppBar(title: const Text("Viewgram Login")),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: passwordController,
+              obscureText: hidePassword,
+              decoration: InputDecoration(
+                labelText: "Password",
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      hidePassword = !hidePassword;
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: loading ? null : login,
+                child: Text(
+                  loading ? "Please wait..." : "LOGIN",
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SignupScreen(),
+                  ),
+                );
+              },
+              child: const Text("Create new account"),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  InputDecoration inputStyle(
-    String hint,
-    IconData icon, {
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white54),
-      prefixIcon: Icon(icon, color: Colors.white),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: Colors.white12,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25),
       ),
     );
   }
