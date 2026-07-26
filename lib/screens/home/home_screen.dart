@@ -11,47 +11,475 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Vɪᴇᴡɢʀᴀᴍ ✦',
+      backgroundColor: const Color(0xFFF7F7FB),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Vɪᴇᴡɢʀᴀᴍ ✦',
+                            style: TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.7,
+                              color: Color(0xFF15151B),
+                            ),
+                          ),
+                        ),
+                        _topIcon(
+                          Icons.notifications_none_rounded,
+                          onTap: () {},
+                        ),
+                        const SizedBox(width: 8),
+                        _topIcon(
+                          Icons.person_outline_rounded,
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    const Text(
+                      'Your World. Your View.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8A8A96),
+                      ),
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    const Text(
+                      'Good evening 👋',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF17171D),
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    const Text(
+                      'What caught your view today?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF777783),
+                      ),
+                    ),
+
+                    const SizedBox(height: 17),
+
+                    Container(
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFFE9E8F0),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.035),
+                            blurRadius: 18,
+                            offset: const Offset(0, 7),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          SizedBox(width: 17),
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Color(0xFF7C3AED),
+                            size: 21,
+                          ),
+                          SizedBox(width: 11),
+                          Expanded(
+                            child: Text(
+                              'Discover people & moments',
+                              style: TextStyle(
+                                color: Color(0xFF8B8B96),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 15,
+                            color: Color(0xFF9B9BA5),
+                          ),
+                          SizedBox(width: 17),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    const Text(
+                      '✦ LIVE VIEWS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                        color: Color(0xFF25252D),
+                      ),
+                    ),
+
+                    const SizedBox(height: 13),
+
+                    SizedBox(
+                      height: 142,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: const [
+                          _StoryCard(
+                            name: 'Your View',
+                            isYourStory: true,
+                          ),
+                          _StoryCard(
+                            name: 'Aisha',
+                            emoji: '🌸',
+                          ),
+                          _StoryCard(
+                            name: 'Arman',
+                            emoji: '🌆',
+                            isLive: true,
+                          ),
+                          _StoryCard(
+                            name: 'Sara',
+                            emoji: '🌿',
+                          ),
+                          _StoryCard(
+                            name: 'Zoya',
+                            emoji: '✨',
+                          ),
+                          _StoryCard(
+                            name: 'Ali',
+                            emoji: '🏙️',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Center(
+                      child: Text(
+                        '←  Swipe to explore views  →',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF9999A4),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    SizedBox(
+                      height: 42,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: const [
+                          _MoodChip(
+                            icon: '🎭',
+                            label: 'Chill',
+                            selected: true,
+                          ),
+                          _MoodChip(
+                            icon: '🔥',
+                            label: 'Trending',
+                          ),
+                          _MoodChip(
+                            icon: '🎨',
+                            label: 'Creative',
+                          ),
+                          _MoodChip(
+                            icon: '🌍',
+                            label: 'Explore',
+                          ),
+                          _MoodChip(
+                            icon: '😂',
+                            label: 'Fun',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    const Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "TODAY'S MOMENTS",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.05,
+                              color: Color(0xFF25252D),
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: Color(0xFF777783),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 13),
+                  ],
+                ),
+              ),
+            ),
+
+            SliverList(
+              delegate: SliverChildListDelegate(
+                const [
+                  PostCard(
+                    postId: 'welcome_post',
+                    user: 'Shaad',
+                    caption: 'Welcome to Viewgram 🚀',
+                  ),
+                  PostCard(
+                    postId: 'creator_post',
+                    user: 'Creator',
+                    caption: 'Share your moments ✨',
+                  ),
+                  PostCard(
+                    postId: 'developer_post',
+                    user: 'Developer',
+                    caption: 'Building social world 🌎',
+                  ),
+                ],
+              ),
+            ),
+
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 110),
+            ),
+          ],
+        ),
+      ),
+
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF7C3AED),
+        foregroundColor: Colors.white,
+        elevation: 8,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CreatePostScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'VIEW',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
           ),
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_box_outlined, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-              );
-            },
+      ),
+    );
+  }
+
+  static Widget _topIcon(
+    IconData icon, {
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: SizedBox(
+          width: 43,
+          height: 43,
+          child: Icon(
+            icon,
+            color: const Color(0xFF202027),
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoryCard extends StatelessWidget {
+  final String name;
+  final String emoji;
+  final bool isYourStory;
+  final bool isLive;
+
+  const _StoryCard({
+    required this.name,
+    this.emoji = '👤',
+    this.isYourStory = false,
+    this.isLive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 94,
+      margin: const EdgeInsets.only(right: 11),
+      child: Column(
+        children: [
+          Container(
+            height: 106,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(23),
+              gradient: LinearGradient(
+                colors: isYourStory
+                    ? const [
+                        Color(0xFF7C3AED),
+                        Color(0xFF38BDF8),
+                      ]
+                    : const [
+                        Color(0xFFE9D5FF),
+                        Color(0xFFBAE6FD),
+                      ],
+              ),
+            ),
+            padding: const EdgeInsets.all(2),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(21),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(fontSize: 34),
+                    ),
+                  ),
+                  if (isYourStory)
+                    Positioned(
+                      right: 7,
+                      bottom: 7,
+                      child: Container(
+                        width: 27,
+                        height: 27,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C3AED),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  if (isLive)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF3B5C),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF303039),
+            ),
           ),
         ],
       ),
-      body: ListView(
-        children: const [
-          PostCard(
-            postId: 'welcome_post',
-            user: 'Shaad',
-            caption: 'Welcome to Viewgram 🚀',
-          ),
-          PostCard(
-            postId: 'creator_post',
-            user: 'Creator',
-            caption: 'Share your moments ✨',
-          ),
-          PostCard(
-            postId: 'developer_post',
-            user: 'Developer',
-            caption: 'Building social world 🌎',
+    );
+  }
+}
+
+class _MoodChip extends StatelessWidget {
+  final String icon;
+  final String label;
+  final bool selected;
+
+  const _MoodChip({
+    required this.icon,
+    required this.label,
+    this.selected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: selected
+            ? const Color(0xFF7C3AED)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected
+              ? const Color(0xFF7C3AED)
+              : const Color(0xFFE6E5EC),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 15)),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? Colors.white
+                  : const Color(0xFF44444E),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
