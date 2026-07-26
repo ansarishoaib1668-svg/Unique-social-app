@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../create/create_post_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,7 +12,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -35,7 +36,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-
       body: ListView(
         children: const [
           PostCard(
@@ -77,13 +77,18 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool liked = false;
+  bool loadingLike = false;
+
   int feelCount = 0;
-  List<String> comments = [];
+  List<Map<String, dynamic>> comments = [];
 
   DocumentReference<Map<String, dynamic>> get postRef =>
       _firestore.collection('posts').doc(widget.postId);
+
+  String? get currentUserId => _auth.currentUser?.uid;
 
   @override
   void initState() {
@@ -100,7 +105,8 @@ class _PostCardState extends State<PostCard> {
           'user': widget.user,
           'caption': widget.caption,
           'feelCount': 0,
-          'comments': <String>[],
+          'likedBy': <String, dynamic>{},
+          'comments': <Map<String, dynamic>>[],
           'createdAt': FieldValue.serverTimestamp(),
         });
 
@@ -112,15 +118,27 @@ class _PostCardState extends State<PostCard> {
       if (data == null || !mounted) return;
 
       final savedComments = data['comments'];
+      final likedBy = data['likedBy'];
+
+      bool userLiked = false;
+
+      if (currentUserId != null && likedBy is Map) {
+        userLiked = likedBy[currentUserId] == true;
+      }
+
+      List<Map<String, dynamic>> loadedComments = [];
+
+      if (savedComments is List) {
+        loadedComments = savedComments
+            .whereType<Map>()
+            .map((comment) => Map<String, dynamic>.from(comment))
+            .toList();
+      }
 
       setState(() {
         feelCount = (data['feelCount'] as num?)?.toInt() ?? 0;
-
-        if (savedComments is List) {
-          comments = savedComments
-              .map((comment) => comment.toString())
-              .toList();
-        }
+        liked = userLiked;
+        comments = loadedComments;
       });
     } catch (e) {
       debugPrint('Firestore load error: $e');
@@ -128,27 +146,65 @@ class _PostCardState extends State<PostCard> {
   }
 
   Future<void> _toggleLike() async {
-    final newLiked = !liked;
-    final newCount = newLiked
-        ? feelCount + 1
-        : (feelCount > 0 ? feelCount - 1 : 0);
+    final uid = currentUserId;
+
+    if (uid == null) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to like posts.')),
+      );
+
+      return;
+    }
+
+    if (loadingLike) return;
+
+    final wasLiked = liked;
 
     setState(() {
-      liked = newLiked;
-      feelCount = newCount;
+      loadingLike = true;
+      liked = !wasLiked;
+      feelCount = wasLiked
+          ? (feelCount > 0 ? feelCount - 1 : 0)
+          : feelCount + 1;
     });
 
     try {
-      await postRef.update({'feelCount': newCount});
+      final batch = _firestore.batch();
+
+      if (wasLiked) {
+        batch.update(postRef, {
+          'feelCount': FieldValue.increment(-1),
+          'likedBy.$uid': FieldValue.delete(),
+        });
+      } else {
+        batch.update(postRef, {
+          'feelCount': FieldValue.increment(1),
+          'likedBy.$uid': true,
+        });
+      }
+
+      await batch.commit();
     } catch (e) {
       debugPrint('Firestore like error: $e');
 
       if (!mounted) return;
 
       setState(() {
-        liked = !newLiked;
-        feelCount = newLiked ? (newCount > 0 ? newCount - 1 : 0) : newCount + 1;
+        liked = wasLiked;
+        feelCount = wasLiked ? feelCount + 1 : feelCount - 1;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update like. Try again.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          loadingLike = false;
+        });
+      }
     }
   }
 
@@ -157,7 +213,28 @@ class _PostCardState extends State<PostCard> {
 
     if (cleanText.isEmpty) return;
 
-    final updatedComments = [...comments, cleanText];
+    final uid = currentUserId;
+
+    if (uid == null) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please login to comment.')));
+
+      return;
+    }
+
+    final user = _auth.currentUser;
+
+    final comment = <String, dynamic>{
+      'userId': uid,
+      'username': user?.displayName ?? widget.user,
+      'text': cleanText,
+      'createdAt': Timestamp.now(),
+    };
+
+    final updatedComments = [...comments, comment];
 
     setState(() {
       comments = updatedComments;
@@ -171,10 +248,14 @@ class _PostCardState extends State<PostCard> {
       if (!mounted) return;
 
       setState(() {
-        comments = comments.length > 1
-            ? comments.sublist(0, comments.length - 1)
-            : [];
+        if (comments.isNotEmpty) {
+          comments = comments.sublist(0, comments.length - 1);
+        }
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not add comment. Try again.')),
+      );
     }
   }
 
@@ -185,13 +266,13 @@ class _PostCardState extends State<PostCard> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      builder: (context) {
+      builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.only(
             left: 15,
             right: 15,
             top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 15,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 15,
           ),
           child: SafeArea(
             child: Column(
@@ -220,13 +301,24 @@ class _PostCardState extends State<PostCard> {
                       shrinkWrap: true,
                       itemCount: comments.length,
                       itemBuilder: (context, index) {
+                        final comment = comments[index];
+
+                        final username =
+                            comment['username']?.toString() ?? 'User';
+
+                        final text = comment['text']?.toString() ?? '';
+
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const CircleAvatar(
                             radius: 18,
                             child: Icon(Icons.person, size: 20),
                           ),
-                          title: Text(comments[index]),
+                          title: Text(
+                            username,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(text),
                         );
                       },
                     ),
@@ -240,21 +332,23 @@ class _PostCardState extends State<PostCard> {
                     hintText: 'Write a comment...',
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.send),
-                      onPressed: () {
+                      onPressed: () async {
                         final text = controller.text;
 
                         if (text.trim().isEmpty) return;
 
-                        _addComment(text);
                         controller.clear();
+
+                        await _addComment(text);
                       },
                     ),
                   ),
-                  onSubmitted: (value) {
+                  onSubmitted: (value) async {
                     if (value.trim().isEmpty) return;
 
-                    _addComment(value);
                     controller.clear();
+
+                    await _addComment(value);
                   },
                 ),
               ],
@@ -262,7 +356,7 @@ class _PostCardState extends State<PostCard> {
           ),
         );
       },
-    );
+    ).whenComplete(controller.dispose);
   }
 
   @override
