@@ -193,115 +193,200 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  InputDecoration _viewgramInput({
+    required String hint,
+    required IconData icon,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFF777783), fontSize: 14),
+      prefixIcon: Icon(icon, color: Color(0xFF8F8F9C), size: 21),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: const Color(0xFF181820),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(17),
+        borderSide: const BorderSide(color: Color(0xFF292934)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(17),
+        borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.4),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      backgroundColor: const Color(0xFF0F0F12),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(22, 28, 22, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Create your Viewgram account',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              // Top branding
+              Center(
+                child: Container(
+                  width: 74,
+                  height: 74,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x557C3AED),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 36,
+                  ),
+                ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+
+              const Center(
+                child: Text(
+                  'Join Viewgram',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 7),
+
+              const Center(
+                child: Text(
+                  'Your World. Your View.',
+                  style: TextStyle(
+                    color: Color(0xFFA1A1AA),
+                    fontSize: 14,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
 
               const Text(
-                'Choose a unique username that people can find you with.',
-                style: TextStyle(color: Colors.grey),
+                'Create your account',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              const SizedBox(height: 7),
+
+              const Text(
+                'Set up your profile and start sharing your world.',
+                style: TextStyle(color: Color(0xFFA1A1AA), fontSize: 14),
               ),
 
               const SizedBox(height: 24),
 
               TextField(
                 controller: nameController,
-                textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+                style: const TextStyle(color: Colors.white),
+                decoration: _viewgramInput(
+                  hint: 'Full name',
+                  icon: Icons.person_outline_rounded,
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
 
               TextField(
                 controller: usernameController,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  prefixText: '@',
-                  hintText: 'your_username',
-                  helperText: '3–20 characters: letters, numbers or _',
-                  border: OutlineInputBorder(),
+                style: const TextStyle(color: Colors.white),
+                decoration: _viewgramInput(
+                  hint: 'Username',
+                  icon: Icons.alternate_email_rounded,
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
 
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+                style: const TextStyle(color: Colors.white),
+                decoration: _viewgramInput(
+                  hint: 'Email address',
+                  icon: Icons.mail_outline_rounded,
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
 
               TextField(
                 controller: passwordController,
                 obscureText: hidePassword,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      hidePassword ? Icons.visibility_off : Icons.visibility,
-                    ),
+                style: const TextStyle(color: Colors.white),
+                decoration: _viewgramInput(
+                  hint: 'Password',
+                  icon: Icons.lock_outline_rounded,
+                  suffix: IconButton(
                     onPressed: () {
                       setState(() {
                         hidePassword = !hidePassword;
                       });
                     },
+                    icon: Icon(
+                      hidePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFF8F8F9C),
+                    ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
 
               TextField(
                 controller: confirmPasswordController,
                 obscureText: hideConfirmPassword,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) {
-                  if (!loading) {
-                    createAccount();
-                  }
-                },
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      hideConfirmPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
+                style: const TextStyle(color: Colors.white),
+                decoration: _viewgramInput(
+                  hint: 'Confirm password',
+                  icon: Icons.verified_user_outlined,
+                  suffix: IconButton(
                     onPressed: () {
                       setState(() {
                         hideConfirmPassword = !hideConfirmPassword;
                       });
                     },
+                    icon: Icon(
+                      hideConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFF8F8F9C),
+                    ),
                   ),
                 ),
               ),
@@ -309,19 +394,78 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 24),
 
               SizedBox(
-                height: 52,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: loading ? null : createAccount,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C3AED),
+                    disabledBackgroundColor: const Color(0xFF3B3B45),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                  ),
                   child: loading
                       ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          width: 23,
+                          height: 23,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
                         )
-                      : const Text(
-                          'CREATE ACCOUNT',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_rounded, size: 20),
+                          ],
                         ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  const Expanded(
+                    child: Divider(color: Color(0xFF292934), thickness: 1),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      'VIEWGRAM',
+                      style: TextStyle(
+                        color: Color(0xFF666673),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    child: Divider(color: Color(0xFF292934), thickness: 1),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              const Center(
+                child: Text(
+                  'Create your space. Share your view. ✦',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF777783), fontSize: 13),
                 ),
               ),
             ],
