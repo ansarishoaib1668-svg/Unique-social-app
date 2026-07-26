@@ -5,127 +5,6 @@ import 'package:share_plus/share_plus.dart';
 
 import '../create/create_post_screen.dart';
 
-class _StreamTab extends StatelessWidget {
-  final String label;
-  final bool selected;
-
-  const _StreamTab({required this.label, this.selected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xFF7C3AED) : const Color(0xFFF0EFF5),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: selected ? Colors.white : const Color(0xFF666672),
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _VibeCard extends StatelessWidget {
-  final String emoji;
-  final String title;
-  final String viewers;
-
-  const _VibeCard({
-    required this.emoji,
-    required this.title,
-    required this.viewers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 190,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 25)),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'LIVE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.7,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              const Icon(
-                Icons.visibility_rounded,
-                color: Colors.white70,
-                size: 14,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '$viewers viewing',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -160,7 +39,10 @@ class HomeScreen extends StatelessWidget {
                           onTap: () {},
                         ),
                         const SizedBox(width: 8),
-                        _topIcon(Icons.person_outline_rounded, onTap: () {}),
+                        _topIcon(
+                          Icons.person_outline_rounded,
+                          onTap: () {},
+                        ),
                       ],
                     ),
 
@@ -190,7 +72,10 @@ class HomeScreen extends StatelessWidget {
 
                     const Text(
                       'What caught your view today?',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF777783)),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF777783),
+                      ),
                     ),
 
                     const SizedBox(height: 17),
@@ -200,7 +85,9 @@ class HomeScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFE9E8F0)),
+                        border: Border.all(
+                          color: const Color(0xFFE9E8F0),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.035),
@@ -241,7 +128,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 28),
 
                     const Text(
-                      'MOMENTS',
+                      '✦ LIVE VIEWS',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -257,12 +144,31 @@ class HomeScreen extends StatelessWidget {
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: const [
-                          _StoryCard(name: 'Your View', isYourStory: true),
-                          _StoryCard(name: 'Aisha', emoji: '🌸'),
-                          _StoryCard(name: 'Arman', emoji: '🌆', isLive: true),
-                          _StoryCard(name: 'Sara', emoji: '🌿'),
-                          _StoryCard(name: 'Zoya', emoji: '✨'),
-                          _StoryCard(name: 'Ali', emoji: '🏙️'),
+                          _StoryCard(
+                            name: 'Your View',
+                            isYourStory: true,
+                          ),
+                          _StoryCard(
+                            name: 'Aisha',
+                            emoji: '🌸',
+                          ),
+                          _StoryCard(
+                            name: 'Arman',
+                            emoji: '🌆',
+                            isLive: true,
+                          ),
+                          _StoryCard(
+                            name: 'Sara',
+                            emoji: '🌿',
+                          ),
+                          _StoryCard(
+                            name: 'Zoya',
+                            emoji: '✨',
+                          ),
+                          _StoryCard(
+                            name: 'Ali',
+                            emoji: '🏙️',
+                          ),
                         ],
                       ),
                     ),
@@ -282,80 +188,43 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 22),
 
-                    const Text(
-                      'LIVE VIBES',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.1,
-                        color: Color(0xFF25252D),
-                      ),
-                    ),
-
-                    const SizedBox(height: 13),
-
-                    SizedBox(
-                      height: 118,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: const [
-                          _VibeCard(
-                            emoji: '🌆',
-                            title: 'Night Photography',
-                            viewers: '1.8K',
-                          ),
-                          _VibeCard(
-                            emoji: '🎵',
-                            title: 'Music Lovers',
-                            viewers: '842',
-                          ),
-                          _VibeCard(
-                            emoji: '🎨',
-                            title: 'Creative Corner',
-                            viewers: '526',
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 22),
-
                     SizedBox(
                       height: 42,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: const [
-                          _MoodChip(icon: '🎭', label: 'Chill', selected: true),
-                          _MoodChip(icon: '🔥', label: 'Trending'),
-                          _MoodChip(icon: '🎨', label: 'Creative'),
-                          _MoodChip(icon: '🌍', label: 'Explore'),
-                          _MoodChip(icon: '😂', label: 'Fun'),
+                          _MoodChip(
+                            icon: '🎭',
+                            label: 'Chill',
+                            selected: true,
+                          ),
+                          _MoodChip(
+                            icon: '🔥',
+                            label: 'Trending',
+                          ),
+                          _MoodChip(
+                            icon: '🎨',
+                            label: 'Creative',
+                          ),
+                          _MoodChip(
+                            icon: '🌍',
+                            label: 'Explore',
+                          ),
+                          _MoodChip(
+                            icon: '😂',
+                            label: 'Fun',
+                          ),
                         ],
                       ),
                     ),
 
                     const SizedBox(height: 28),
 
-                    SizedBox(
-                      height: 42,
-                      child: Row(
-                        children: const [
-                          Expanded(
-                            child: _StreamTab(label: 'For You', selected: true),
-                          ),
-                          Expanded(child: _StreamTab(label: 'Following')),
-                          Expanded(child: _StreamTab(label: 'Fresh')),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
                     const Row(
                       children: [
                         Expanded(
                           child: Text(
-                            "✦ VIEWSTREAM",
+                            "TODAY'S MOMENTS",
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w900,
@@ -379,26 +248,30 @@ class HomeScreen extends StatelessWidget {
             ),
 
             SliverList(
-              delegate: SliverChildListDelegate(const [
-                PostCard(
-                  postId: 'welcome_post',
-                  user: 'Shaad',
-                  caption: 'Welcome to Viewgram 🚀',
-                ),
-                PostCard(
-                  postId: 'creator_post',
-                  user: 'Creator',
-                  caption: 'Share your moments ✨',
-                ),
-                PostCard(
-                  postId: 'developer_post',
-                  user: 'Developer',
-                  caption: 'Building social world 🌎',
-                ),
-              ]),
+              delegate: SliverChildListDelegate(
+                const [
+                  PostCard(
+                    postId: 'welcome_post',
+                    user: 'Shaad',
+                    caption: 'Welcome to Viewgram 🚀',
+                  ),
+                  PostCard(
+                    postId: 'creator_post',
+                    user: 'Creator',
+                    caption: 'Share your moments ✨',
+                  ),
+                  PostCard(
+                    postId: 'developer_post',
+                    user: 'Developer',
+                    caption: 'Building social world 🌎',
+                  ),
+                ],
+              ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 110),
+            ),
           ],
         ),
       ),
@@ -410,19 +283,27 @@ class HomeScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+            MaterialPageRoute(
+              builder: (_) => const CreatePostScreen(),
+            ),
           );
         },
         icon: const Icon(Icons.add_rounded),
         label: const Text(
           'VIEW',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.5),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
   }
 
-  static Widget _topIcon(IconData icon, {required VoidCallback onTap}) {
+  static Widget _topIcon(
+    IconData icon, {
+    required VoidCallback onTap,
+  }) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
@@ -432,7 +313,11 @@ class HomeScreen extends StatelessWidget {
         child: SizedBox(
           width: 43,
           height: 43,
-          child: Icon(icon, color: const Color(0xFF202027), size: 22),
+          child: Icon(
+            icon,
+            color: const Color(0xFF202027),
+            size: 22,
+          ),
         ),
       ),
     );
@@ -465,8 +350,14 @@ class _StoryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(23),
               gradient: LinearGradient(
                 colors: isYourStory
-                    ? const [Color(0xFF7C3AED), Color(0xFF38BDF8)]
-                    : const [Color(0xFFE9D5FF), Color(0xFFBAE6FD)],
+                    ? const [
+                        Color(0xFF7C3AED),
+                        Color(0xFF38BDF8),
+                      ]
+                    : const [
+                        Color(0xFFE9D5FF),
+                        Color(0xFFBAE6FD),
+                      ],
               ),
             ),
             padding: const EdgeInsets.all(2),
@@ -478,7 +369,10 @@ class _StoryCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 34)),
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(fontSize: 34),
+                    ),
                   ),
                   if (isYourStory)
                     Positioned(
@@ -490,7 +384,10 @@ class _StoryCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFF7C3AED),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
                         ),
                         child: const Icon(
                           Icons.add_rounded,
@@ -560,10 +457,14 @@ class _MoodChip extends StatelessWidget {
       margin: const EdgeInsets.only(right: 9),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFF7C3AED) : Colors.white,
+        color: selected
+            ? const Color(0xFF7C3AED)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: selected ? const Color(0xFF7C3AED) : const Color(0xFFE6E5EC),
+          color: selected
+              ? const Color(0xFF7C3AED)
+              : const Color(0xFFE6E5EC),
         ),
       ),
       child: Row(
@@ -573,7 +474,9 @@ class _MoodChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : const Color(0xFF44444E),
+              color: selected
+                  ? Colors.white
+                  : const Color(0xFF44444E),
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -607,16 +510,8 @@ class _PostCardState extends State<PostCard> {
   bool liked = false;
   bool loadingLike = false;
 
-  String selectedReaction = '';
-  bool showReactions = false;
-
   int feelCount = 0;
   List<Map<String, dynamic>> comments = [];
-
-  int get viewScore {
-    final reactionScore = selectedReaction.isNotEmpty ? 5 : 0;
-    return (feelCount * 2) + (comments.length * 3) + reactionScore;
-  }
 
   DocumentReference<Map<String, dynamic>> get postRef =>
       _firestore.collection('posts').doc(widget.postId);
@@ -739,29 +634,6 @@ class _PostCardState extends State<PostCard> {
         });
       }
     }
-  }
-
-  Widget _reactionButton(String emoji, String label) {
-    final selected = selectedReaction == label;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedReaction = label;
-          showReactions = false;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFF0E7FF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(emoji, style: TextStyle(fontSize: selected ? 25 : 22)),
-      ),
-    );
   }
 
   Future<void> _addComment(String text) async {
@@ -941,11 +813,6 @@ class _PostCardState extends State<PostCard> {
             children: [
               GestureDetector(
                 onTap: _toggleLike,
-                onLongPress: () {
-                  setState(() {
-                    showReactions = !showReactions;
-                  });
-                },
                 child: Icon(
                   liked ? Icons.favorite : Icons.favorite_border,
                   color: liked ? Colors.red : Colors.black,
@@ -953,60 +820,11 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
 
-              if (showReactions) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                    border: Border.all(color: const Color(0xFFE9E8F0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _reactionButton('❤️', 'Love'),
-                      _reactionButton('🔥', 'Fire'),
-                      _reactionButton('😂', 'Funny'),
-                      _reactionButton('✨', 'Wow'),
-                    ],
-                  ),
-                ),
-              ],
-
               const SizedBox(width: 6),
 
               Text(
                 'Feel $feelCount',
                 style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(width: 10),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0E7FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '✦ $viewScore',
-                  style: const TextStyle(
-                    color: Color(0xFF7C3AED),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
               ),
 
               const SizedBox(width: 20),
