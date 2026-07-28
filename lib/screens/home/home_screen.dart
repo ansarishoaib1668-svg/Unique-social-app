@@ -492,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'Could not load posts. Please try again.',
+                        'Could not load posts: ${snapshot.error}',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
