@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../create/create_post_screen.dart';
-import '../create/view_realm_screen.dart';
 
 class _StreamTab extends StatelessWidget {
   final String label;
@@ -202,15 +200,8 @@ class _VibeCard extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _createHubOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -501,81 +492,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      floatingActionButton: _CreateHub(
-        open: _createHubOpen,
-        onToggle: () {
-          setState(() {
-            _createHubOpen = !_createHubOpen;
-          });
-        },
-        onPhoto: () {
-          setState(() {
-            _createHubOpen = false;
-          });
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF7C3AED),
+        foregroundColor: Colors.white,
+        elevation: 8,
+        onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CreatePostScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
           );
         },
-        onReel: () async {
-          setState(() {
-            _createHubOpen = false;
-          });
-
-          final picker = ImagePicker();
-          final video = await picker.pickVideo(
-            source: ImageSource.gallery,
-          );
-
-          if (!context.mounted || video == null) return;
-
-          final user = FirebaseAuth.instance.currentUser;
-          if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Reel banane ke liye login zaroori hai.'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          final realmRef =
-              FirebaseFirestore.instance.collection('realms').doc();
-
-          await realmRef.set({
-            'creatorId': user.uid,
-            'videoPath': video.path,
-            'createdAt': FieldValue.serverTimestamp(),
-            'type': 'reel',
-            'status': 'draft',
-          });
-
-          if (!context.mounted) return;
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ViewRealmScreen(
-                videoPath: video.path,
-                realmId: realmRef.id,
-              ),
-            ),
-          );
-        },
-        onStory: () {
-          setState(() {
-            _createHubOpen = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Story View is coming soon ✨'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'VIEW',
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.5),
+        ),
       ),
     );
   }
@@ -692,203 +623,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CreateHub extends StatelessWidget {
-  final bool open;
-  final VoidCallback onToggle;
-  final VoidCallback onPhoto;
-  final VoidCallback onReel;
-  final VoidCallback onStory;
-
-  const _CreateHub({
-    required this.open,
-    required this.onToggle,
-    required this.onPhoto,
-    required this.onReel,
-    required this.onStory,
-  });
-
-  Widget _option({
-    required String emoji,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      elevation: 0,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFE9E7F2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF7C3AED).withValues(alpha: 0.10),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 11,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF7C3AED),
-                        Color(0xFF38BDF8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-                const SizedBox(width: 9),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.35,
-                    color: Color(0xFF292932),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 240),
-          switchInCurve: Curves.easeOutBack,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) {
-            final slide = Tween<Offset>(
-              begin: const Offset(0.18, 0),
-              end: Offset.zero,
-            ).animate(animation);
-
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: slide,
-                child: child,
-              ),
-            );
-          },
-          child: open
-              ? Column(
-                  key: const ValueKey("create_options"),
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _option(
-                      emoji: "📸",
-                      label: "PHOTO VIEW",
-                      onTap: onPhoto,
-                    ),
-                    const SizedBox(height: 8),
-                    _option(
-                      emoji: "🎬",
-                      label: "REEL VIEW",
-                      onTap: onReel,
-                    ),
-                    const SizedBox(height: 8),
-                    _option(
-                      emoji: "⭕",
-                      label: "STORY VIEW",
-                      onTap: onStory,
-                    ),
-                    const SizedBox(height: 13),
-                  ],
-                )
-              : const SizedBox.shrink(
-                  key: ValueKey("create_closed"),
-                ),
-        ),
-        GestureDetector(
-          onTap: onToggle,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            width: open ? 62 : 118,
-            height: 58,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF7C3AED).withValues(alpha: 0.28),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedRotation(
-                  turns: open ? 0.125 : 0,
-                  duration: const Duration(milliseconds: 260),
-                  child: const Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                    size: 25,
-                  ),
-                ),
-                if (!open) ...[
-                  const SizedBox(width: 6),
-                  const Text(
-                    "VIEW",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.7,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

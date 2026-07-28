@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import '../models/post_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Stream<List<PostModel>> getPosts() {
     return _db
@@ -31,16 +28,6 @@ class FirestoreService {
     });
   }
 
-  Future<String> uploadFile(File file, String type) async {
-    final ref = _storage
-        .ref()
-        .child('posts/${DateTime.now().millisecondsSinceEpoch}.$type');
-
-    await ref.putFile(file);
-
-    return await ref.getDownloadURL();
-  }
-
   Future<void> createPost({
     required String text,
     String? imageUrl,
@@ -55,4 +42,5 @@ class FirestoreService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
 }

@@ -158,9 +158,15 @@ class HomeScreen extends StatelessWidget {
                         _topIcon(
                           Icons.notifications_none_rounded,
                           onTap: () {},
+                          accent: const Color(0xFF7C3AED),
                         ),
                         const SizedBox(width: 8),
-                        _topIcon(Icons.person_outline_rounded, onTap: () {}),
+                        _topIcon(
+                          Icons.person_outline_rounded,
+                          onTap: () {},
+                          accent: const Color(0xFF38BDF8),
+                          profile: true,
+                        ),
                       ],
                     ),
 
@@ -195,48 +201,7 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 17),
 
-                    Container(
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFE9E8F0)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.035),
-                            blurRadius: 18,
-                            offset: const Offset(0, 7),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        children: [
-                          SizedBox(width: 17),
-                          Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Color(0xFF7C3AED),
-                            size: 21,
-                          ),
-                          SizedBox(width: 11),
-                          Expanded(
-                            child: Text(
-                              'Discover people & moments',
-                              style: TextStyle(
-                                color: Color(0xFF8B8B96),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 15,
-                            color: Color(0xFF9B9BA5),
-                          ),
-                          SizedBox(width: 17),
-                        ],
-                      ),
-                    ),
+                    _discoverPortal(context),
 
                     const SizedBox(height: 28),
 
@@ -422,17 +387,116 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  static Widget _topIcon(IconData icon, {required VoidCallback onTap}) {
+  static Widget _topIcon(
+    IconData icon, {
+    required VoidCallback onTap,
+    required Color accent,
+    bool profile = false,
+  }) {
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(profile ? 17 : 14),
         onTap: onTap,
-        child: SizedBox(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
           width: 43,
           height: 43,
-          child: Icon(icon, color: const Color(0xFF202027), size: 22),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(profile ? 17 : 14),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.18),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.10),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: accent,
+            size: profile ? 21 : 22,
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _discoverPortal(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {},
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF7C3AED),
+                Color(0xFF38BDF8),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.20),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              SizedBox(width: 17),
+              Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.white,
+                size: 23,
+              ),
+              SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'VIEW PORTAL',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Discover people & moments',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+              SizedBox(width: 16),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/firestore_service.dart';
+import '../../services/cloudinary_service.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -43,9 +45,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       uploading = true;
     });
 
-    String url = await service.uploadFile(
+    String url = await CloudinaryService.uploadFile(
       selectedFile!,
-      type,
     );
 
     await service.createPost(
