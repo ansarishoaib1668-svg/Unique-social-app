@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
+import '../../models/post_model.dart';
+import '../../services/firestore_service.dart';
 
 import '../create/create_post_screen.dart';
 import '../create/view_realm_screen.dart';
@@ -211,6 +214,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _createHubOpen = false;
+
+  final FirestoreService _firestoreService = FirestoreService();
+
+  Stream<List<PostModel>> get _postsStream =>
+      _firestoreService.getPosts();
 
   @override
   Widget build(BuildContext context) {
@@ -476,24 +484,72 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            SliverList(
-              delegate: SliverChildListDelegate(const [
-                PostCard(
-                  postId: 'welcome_post',
-                  user: 'Shaad',
-                  caption: 'Welcome to Viewgram 🚀',
-                ),
-                PostCard(
-                  postId: 'creator_post',
-                  user: 'Creator',
-                  caption: 'Share your moments ✨',
-                ),
-                PostCard(
-                  postId: 'developer_post',
-                  user: 'Developer',
-                  caption: 'Building social world 🌎',
-                ),
-              ]),
+            StreamBuilder<List<PostModel>>(
+              stream: _postsStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'Could not load posts. Please try again.',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(28),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+
+                final posts = snapshot.data ?? [];
+
+                if (posts.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(28),
+                      child: Center(
+                        child: Text(
+                          'No views yet. Create your first View! ✨',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final post = posts[index];
+
+                      return PostCard(
+                        postId: post.id,
+                        user: 'Viewgram User',
+                        caption: post.text,
+                        imageUrl: post.imageUrl,
+                        videoUrl: post.videoUrl,
+                      );
+                    },
+                    childCount: posts.length,
+                  ),
+                );
+              },
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 110)),
@@ -1573,12 +1629,16 @@ class PostCard extends StatefulWidget {
   final String postId;
   final String user;
   final String caption;
+  final String imageUrl;
+  final String videoUrl;
 
   const PostCard({
     super.key,
     required this.postId,
     required this.user,
     required this.caption,
+    this.imageUrl = '',
+    this.videoUrl = '',
   });
 
   @override
@@ -1591,6 +1651,9 @@ class _PostCardState extends State<PostCard> {
 
   bool liked = false;
   bool loadingLike = false;
+
+  VideoPlayerController? _videoController;
+  Future<void>? _videoInitializeFuture;
 
   String selectedReaction = '';
   bool showReactions = false;
@@ -1612,6 +1675,32 @@ class _PostCardState extends State<PostCard> {
   void initState() {
     super.initState();
     _loadPost();
+    _setupVideo();
+  }
+
+  void _setupVideo() {
+    final url = widget.videoUrl.trim();
+
+    if (url.isEmpty) return;
+
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse(url),
+    );
+
+    _videoController = controller;
+    _videoInitializeFuture = controller.initialize().then((_) {
+      if (!mounted) return;
+      controller.setLooping(true);
+      setState(() {});
+    }).catchError((error) {
+      debugPrint('Video initialization error: $error');
+    });
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPost() async {
@@ -1746,6 +1835,87 @@ class _PostCardState extends State<PostCard> {
         ),
         child: Text(emoji, style: TextStyle(fontSize: selected ? 25 : 22)),
       ),
+    );
+  }
+
+  Widget _buildMedia() {
+    final videoUrl = widget.videoUrl.trim();
+    if (videoUrl.isNotEmpty) {
+      final controller = _videoController;
+      final future = _videoInitializeFuture;
+      if (controller == null || future == null) {
+        return const SizedBox(height: 330, child: Center(child: CircularProgressIndicator()));
+      }
+      return Container(
+        height: 330,
+        width: double.infinity,
+        color: Colors.black,
+        child: FutureBuilder<void>(
+          future: future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator(color: Colors.white));
+            }
+            if (snapshot.hasError || !controller.value.isInitialized) {
+              return const Center(child: Icon(Icons.video_library_outlined, size: 70, color: Colors.grey));
+            }
+            return GestureDetector(
+              onTap: () {
+                if (controller.value.isPlaying) {
+                  controller.pause();
+                } else {
+                  controller.play();
+                }
+                setState(() {});
+              },
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox.expand(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: controller.value.size.width,
+                        height: controller.value.size.height,
+                        child: VideoPlayer(controller),
+                      ),
+                    ),
+                  ),
+                  if (!controller.value.isPlaying)
+                    const CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.black54,
+                      child: Icon(Icons.play_arrow_rounded, size: 40, color: Colors.white),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    final imageUrl = widget.imageUrl.trim();
+    if (imageUrl.isNotEmpty) {
+      return Container(
+        height: 330,
+        width: double.infinity,
+        color: Colors.grey[900],
+        child: Image.network(
+          imageUrl,
+          width: double.infinity,
+          height: 330,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, progress) => progress == null ? child : const Center(child: CircularProgressIndicator()),
+          errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image_outlined, size: 70, color: Colors.grey)),
+        ),
+      );
+    }
+    return Container(
+      height: 330,
+      width: double.infinity,
+      color: Colors.grey[900],
+      child: const Icon(Icons.image_outlined, size: 90, color: Colors.grey),
     );
   }
 
@@ -1913,12 +2083,7 @@ class _PostCardState extends State<PostCard> {
           ),
         ),
 
-        Container(
-          height: 330,
-          width: double.infinity,
-          color: Colors.grey[900],
-          child: const Icon(Icons.image_outlined, size: 90, color: Colors.grey),
-        ),
+        _buildMedia(),
 
         Padding(
           padding: const EdgeInsets.all(12),
