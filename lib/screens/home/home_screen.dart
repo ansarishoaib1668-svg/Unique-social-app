@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,10 +19,7 @@ class _StreamTab extends StatelessWidget {
   final String label;
   final bool selected;
 
-  const _StreamTab({
-    required this.label,
-    this.selected = false,
-  });
+  const _StreamTab({required this.label, this.selected = false});
 
   IconData get _icon {
     switch (label) {
@@ -46,10 +44,7 @@ class _StreamTab extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: selected
             ? const LinearGradient(
-                colors: [
-                  Color(0xFF7C3AED),
-                  Color(0xFF38BDF8),
-                ],
+                colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               )
@@ -57,9 +52,7 @@ class _StreamTab extends StatelessWidget {
         color: selected ? null : Colors.white,
         borderRadius: BorderRadius.circular(17),
         border: Border.all(
-          color: selected
-              ? Colors.transparent
-              : const Color(0xFFE5E3ED),
+          color: selected ? Colors.transparent : const Color(0xFFE5E3ED),
           width: 1.1,
         ),
         boxShadow: [
@@ -80,9 +73,7 @@ class _StreamTab extends StatelessWidget {
             child: Icon(
               _icon,
               size: 15,
-              color: selected
-                  ? Colors.white
-                  : const Color(0xFF777783),
+              color: selected ? Colors.white : const Color(0xFF777783),
             ),
           ),
           const SizedBox(width: 5),
@@ -91,13 +82,9 @@ class _StreamTab extends StatelessWidget {
               label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: selected
-                    ? Colors.white
-                    : const Color(0xFF555560),
+                color: selected ? Colors.white : const Color(0xFF555560),
                 fontSize: 11.5,
-                fontWeight: selected
-                    ? FontWeight.w900
-                    : FontWeight.w700,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                 letterSpacing: selected ? 0.15 : 0,
               ),
             ),
@@ -221,8 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final FirestoreService _firestoreService = FirestoreService();
 
-  Stream<List<PostModel>> get _postsStream =>
-      _firestoreService.getPosts();
+  Stream<List<PostModel>> get _postsStream => _firestoreService.getPosts();
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.045),
+                                    color: Colors.black.withValues(
+                                      alpha: 0.045,
+                                    ),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -459,10 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Text(
                         'Could not load posts: ${snapshot.error}',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ),
                   );
@@ -472,9 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(28),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   );
                 }
@@ -489,10 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           'No views yet. Create your first View! ✨',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
                     ),
@@ -500,20 +480,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final post = posts[index];
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final post = posts[index];
 
-                      return PostCard(
-                        postId: post.id,
-                        user: 'Viewgram User',
-                        caption: post.text,
-                        imageUrl: post.imageUrl,
-                        videoUrl: post.videoUrl,
-                      );
-                    },
-                    childCount: posts.length,
-                  ),
+                    return PostCard(
+                      postId: post.id,
+                      user: 'Viewgram User',
+                      caption: post.text,
+                      imageUrl: post.imageUrl,
+                      videoUrl: post.videoUrl,
+                    );
+                  }, childCount: posts.length),
                 );
               },
             ),
@@ -536,9 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CreatePostScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
           );
         },
         onReel: () async {
@@ -547,9 +522,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
 
           final picker = ImagePicker();
-          final video = await picker.pickVideo(
-            source: ImageSource.gallery,
-          );
+          final video = await picker.pickVideo(source: ImageSource.gallery);
 
           if (!context.mounted || video == null) return;
 
@@ -564,8 +537,9 @@ class _HomeScreenState extends State<HomeScreen> {
             return;
           }
 
-          final realmRef =
-              FirebaseFirestore.instance.collection('realms').doc();
+          final realmRef = FirebaseFirestore.instance
+              .collection('realms')
+              .doc();
 
           await realmRef.set({
             'creatorId': user.uid,
@@ -580,10 +554,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ViewRealmScreen(
-                videoPath: video.path,
-                realmId: realmRef.id,
-              ),
+              builder: (_) =>
+                  ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
             ),
           );
         },
@@ -676,11 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: Icon(
-            icon,
-            color: accent,
-            size: profile ? 21 : 22,
-          ),
+          child: Icon(icon, color: accent, size: profile ? 21 : 22),
         ),
       ),
     );
@@ -697,10 +665,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 60,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFF7C3AED),
-                Color(0xFF38BDF8),
-              ],
+              colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -716,11 +681,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: const Row(
             children: [
               SizedBox(width: 17),
-              Icon(
-                Icons.auto_awesome_rounded,
-                color: Colors.white,
-                size: 23,
-              ),
+              Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 23),
               SizedBox(width: 11),
               Expanded(
                 child: Column(
@@ -748,11 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
+              Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 22),
               SizedBox(width: 16),
             ],
           ),
@@ -793,10 +750,7 @@ class _CreateHub extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFE9E7F2),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFE9E7F2), width: 1),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF7C3AED).withValues(alpha: 0.10),
@@ -806,10 +760,7 @@ class _CreateHub extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 11,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -818,20 +769,14 @@ class _CreateHub extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF7C3AED),
-                        Color(0xFF38BDF8),
-                      ],
+                      colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(11),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text(emoji, style: const TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(width: 9),
                 Text(
@@ -869,10 +814,7 @@ class _CreateHub extends StatelessWidget {
 
             return FadeTransition(
               opacity: animation,
-              child: SlideTransition(
-                position: slide,
-                child: child,
-              ),
+              child: SlideTransition(position: slide, child: child),
             );
           },
           child: open
@@ -880,29 +822,15 @@ class _CreateHub extends StatelessWidget {
                   key: const ValueKey("create_options"),
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _option(
-                      emoji: "📸",
-                      label: "PHOTO VIEW",
-                      onTap: onPhoto,
-                    ),
+                    _option(emoji: "📸", label: "PHOTO VIEW", onTap: onPhoto),
                     const SizedBox(height: 8),
-                    _option(
-                      emoji: "🎬",
-                      label: "REEL VIEW",
-                      onTap: onReel,
-                    ),
+                    _option(emoji: "🎬", label: "REEL VIEW", onTap: onReel),
                     const SizedBox(height: 8),
-                    _option(
-                      emoji: "⭕",
-                      label: "STORY VIEW",
-                      onTap: onStory,
-                    ),
+                    _option(emoji: "⭕", label: "STORY VIEW", onTap: onStory),
                     const SizedBox(height: 13),
                   ],
                 )
-              : const SizedBox.shrink(
-                  key: ValueKey("create_closed"),
-                ),
+              : const SizedBox.shrink(key: ValueKey("create_closed")),
         ),
         GestureDetector(
           onTap: onToggle,
@@ -1001,6 +929,26 @@ class _GalaxyView {
   }
 }
 
+class _GalaxyUser {
+  final String userId;
+  final String name;
+  final String username;
+  final String photoUrl;
+  final bool live;
+  final List<_GalaxyView> stories;
+
+  const _GalaxyUser({
+    required this.userId,
+    required this.name,
+    required this.username,
+    required this.photoUrl,
+    required this.live,
+    required this.stories,
+  });
+
+  _GalaxyView get preview => stories.first;
+}
+
 class _ViewGalaxy extends StatefulWidget {
   const _ViewGalaxy({super.key});
 
@@ -1014,15 +962,12 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
 
   int _selected = 0;
 
-  List<_GalaxyView> _views = [];
+  List<_GalaxyUser> _views = [];
 
   Stream<QuerySnapshot<Map<String, dynamic>>> get _storyStream =>
       FirebaseFirestore.instance
           .collection('stories')
-          .where(
-            'expiresAt',
-            isGreaterThan: Timestamp.now(),
-          )
+          .where('expiresAt', isGreaterThan: Timestamp.now())
           .orderBy('expiresAt')
           .snapshots();
 
@@ -1061,12 +1006,12 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
     });
   }
 
-  void _openView(_GalaxyView view) {
+  void _openView(_GalaxyUser user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ViewCanvas(view: view),
+      builder: (_) => _ViewCanvas(user: user),
     );
   }
 
@@ -1084,11 +1029,32 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _storyStream,
       builder: (context, snapshot) {
-        final views = snapshot.data?.docs
+        final allStories =
+            snapshot.data?.docs
                 .map(_GalaxyView.fromFirestore)
                 .where((view) => view.mediaUrl.isNotEmpty)
                 .toList() ??
             <_GalaxyView>[];
+
+        // View Galaxy: one circle per user, with all active stories.
+        final grouped = <String, List<_GalaxyView>>{};
+
+        for (final story in allStories) {
+          final key = story.userId.isNotEmpty ? story.userId : story.storyId;
+          grouped.putIfAbsent(key, () => <_GalaxyView>[]).add(story);
+        }
+
+        final views = grouped.entries.map((entry) {
+          final stories = entry.value;
+          return _GalaxyUser(
+            userId: stories.first.userId,
+            name: stories.first.name,
+            username: stories.first.username,
+            photoUrl: stories.first.photoUrl,
+            live: stories.any((story) => story.live),
+            stories: stories,
+          );
+        }).toList();
 
         _views = views;
 
@@ -1098,180 +1064,169 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
           _selected = 0;
         }
 
-return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'VIEW GALAXY',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
-            color: Color(0xFF25252D),
-          ),
-        ),
-        const SizedBox(height: 12),
-        GestureDetector(
-          onHorizontalDragEnd: (details) {
-            final velocity = details.primaryVelocity ?? 0;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'VIEW GALAXY',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+                color: Color(0xFF25252D),
+              ),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onHorizontalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0;
 
-            if (velocity < 0) {
-              _next();
-            } else if (velocity > 0) {
-              _previous();
-            }
-          },
-          child: SizedBox(
-            width: double.infinity,
-            height: 255,
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 182,
-                      height: 182,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFF5EEFF),
-                            Color(0xFFE7F7FF),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF7C3AED)
-                                .withValues(alpha: 0.12),
-                            blurRadius: 35,
-                            spreadRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    CustomPaint(
-                      size: const Size(235, 235),
-                      painter: _GalaxyPainter(
-                        progress: _controller.value,
-                      ),
-                    ),
-
-                    ...List.generate(_views.length, (index) {
-                      final baseAngle =
-                          (index / _views.length) *
-                              math.pi *
-                              2;
-
-                      final angle =
-                          baseAngle +
-                          (_selected * (math.pi * 2 / _views.length)) +
-                          (_controller.value *
-                              (math.pi * 2 / _views.length));
-
-                      const radius = 94.0;
-
-                      final offset = Offset(
-                        math.cos(angle) * radius,
-                        math.sin(angle) * radius,
-                      );
-
-                      return Transform.translate(
-                        offset: offset,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selected = index;
-                            });
-                            _openView(_views[index]);
-                          },
-                          child: _GalaxyAvatar(
-                            view: _views[index],
-                            selected: _selected == index,
-                          ),
-                        ),
-                      );
-                    }),
-
-                    GestureDetector(
-                      onTap: _createView,
-                      child: Container(
-                        width: 88,
-                        height: 88,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF7C3AED),
-                              Color(0xFF38BDF8),
+                if (velocity < 0) {
+                  _next();
+                } else if (velocity > 0) {
+                  _previous();
+                }
+              },
+              child: SizedBox(
+                width: double.infinity,
+                height: 255,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 182,
+                          height: 182,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFF5EEFF), Color(0xFFE7F7FF)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF7C3AED,
+                                ).withValues(alpha: 0.12),
+                                blurRadius: 35,
+                                spreadRadius: 4,
+                              ),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF7C3AED)
-                                  .withValues(alpha: 0.25),
-                              blurRadius: 20,
-                              spreadRadius: 3,
-                            ),
-                          ],
                         ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_rounded,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            SizedBox(height: 1),
-                            Text(
-                              'YOUR VIEW',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.6,
+
+                        CustomPaint(
+                          size: const Size(235, 235),
+                          painter: _GalaxyPainter(progress: _controller.value),
+                        ),
+
+                        ...List.generate(_views.length, (index) {
+                          final baseAngle =
+                              (index / _views.length) * math.pi * 2;
+
+                          final angle =
+                              baseAngle +
+                              (_selected * (math.pi * 2 / _views.length)) +
+                              (_controller.value *
+                                  (math.pi * 2 / _views.length));
+
+                          const radius = 94.0;
+
+                          final offset = Offset(
+                            math.cos(angle) * radius,
+                            math.sin(angle) * radius,
+                          );
+
+                          return Transform.translate(
+                            offset: offset,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selected = index;
+                                });
+                                _openView(_views[index]);
+                              },
+                              child: _GalaxyAvatar(
+                                view: _views[index],
+                                selected: _selected == index,
                               ),
                             ),
-                          ],
+                          );
+                        }),
+
+                        GestureDetector(
+                          onTap: _createView,
+                          child: Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF7C3AED,
+                                  ).withValues(alpha: 0.25),
+                                  blurRadius: 20,
+                                  spreadRadius: 3,
+                                ),
+                              ],
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_rounded,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                                SizedBox(height: 1),
+                                Text(
+                                  'YOUR VIEW',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-        const Center(
-          child: Text(
-            '✦ Swipe Galaxy • Tap a View to explore ✦',
-            style: TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF9999A4),
-              fontWeight: FontWeight.w600,
+            const Center(
+              child: Text(
+                '✦ Swipe Galaxy • Tap a View to explore ✦',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF9999A4),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
-    );
+          ],
+        );
       },
     );
   }
 }
 
 class _GalaxyAvatar extends StatelessWidget {
-  final _GalaxyView view;
+  final _GalaxyUser view;
   final bool selected;
 
-  const _GalaxyAvatar({
-    required this.view,
-    required this.selected,
-  });
+  const _GalaxyAvatar({required this.view, required this.selected});
 
   @override
   Widget build(BuildContext context) {
@@ -1287,19 +1242,14 @@ class _GalaxyAvatar extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: view.live
-                  ? const [
-                      Color(0xFFFF3B5C),
-                      Color(0xFFFF9F43),
-                    ]
-                  : const [
-                      Color(0xFF7C3AED),
-                      Color(0xFF38BDF8),
-                    ],
+                  ? const [Color(0xFFFF3B5C), Color(0xFFFF9F43)]
+                  : const [Color(0xFF7C3AED), Color(0xFF38BDF8)],
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF7C3AED)
-                    .withValues(alpha: selected ? 0.28 : 0.12),
+                color: const Color(
+                  0xFF7C3AED,
+                ).withValues(alpha: selected ? 0.28 : 0.12),
                 blurRadius: selected ? 16 : 8,
               ),
             ],
@@ -1311,10 +1261,8 @@ class _GalaxyAvatar extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                view.emoji,
-                style: TextStyle(
-                  fontSize: selected ? 27 : 23,
-                ),
+                view.preview.emoji,
+                style: TextStyle(fontSize: selected ? 27 : 23),
               ),
             ),
           ),
@@ -1345,28 +1293,18 @@ class _GalaxyAvatar extends StatelessWidget {
 class _GalaxyPainter extends CustomPainter {
   final double progress;
 
-  const _GalaxyPainter({
-    required this.progress,
-  });
+  const _GalaxyPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(
-      size.width / 2,
-      size.height / 2,
-    );
+    final center = Offset(size.width / 2, size.height / 2);
 
     final ringPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
-      ..color = const Color(0xFF7C3AED)
-          .withValues(alpha: 0.16);
+      ..color = const Color(0xFF7C3AED).withValues(alpha: 0.16);
 
-    canvas.drawCircle(
-      center,
-      94,
-      ringPaint,
-    );
+    canvas.drawCircle(center, 94, ringPaint);
 
     final angle = progress * math.pi * 2;
 
@@ -1375,14 +1313,9 @@ class _GalaxyPainter extends CustomPainter {
       center.dy + math.sin(angle) * 94,
     );
 
-    final dotPaint = Paint()
-      ..color = const Color(0xFF38BDF8);
+    final dotPaint = Paint()..color = const Color(0xFF38BDF8);
 
-    canvas.drawCircle(
-      dot,
-      4,
-      dotPaint,
-    );
+    canvas.drawCircle(dot, 4, dotPaint);
   }
 
   @override
@@ -1391,27 +1324,114 @@ class _GalaxyPainter extends CustomPainter {
   }
 }
 
-class _ViewCanvas extends StatelessWidget {
-  final _GalaxyView view;
+class _ViewCanvas extends StatefulWidget {
+  final _GalaxyUser user;
 
-  const _ViewCanvas({
-    required this.view,
-  });
+  const _ViewCanvas({required this.user});
+
+  @override
+  State<_ViewCanvas> createState() => _ViewCanvasState();
+}
+
+class _ViewCanvasState extends State<_ViewCanvas> {
+  late final PageController _pageController;
+  Timer? _storyTimer;
+  int _storyIndex = 0;
+  double _storyProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        StoryService.markViewed(widget.user.stories[_storyIndex].storyId);
+        _startStoryTimer();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _storyTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onStoryChanged(int index) {
+    _storyTimer?.cancel();
+
+    setState(() {
+      _storyIndex = index;
+      _storyProgress = 0.0;
+    });
+
+    StoryService.markViewed(widget.user.stories[index].storyId);
+
+    _startStoryTimer();
+  }
+
+  void _startStoryTimer() {
+    _storyTimer?.cancel();
+
+    final story = widget.user.stories[_storyIndex];
+
+    // Video apne playback ke hisaab se chalega.
+    if (story.mediaType == 'video') return;
+
+    const tick = Duration(milliseconds: 100);
+    const totalTicks = 50;
+
+    var currentTick = 0;
+
+    _storyTimer = Timer.periodic(tick, (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      currentTick++;
+
+      setState(() {
+        _storyProgress = (currentTick / totalTicks).clamp(0.0, 1.0);
+      });
+
+      if (currentTick >= totalTicks) {
+        timer.cancel();
+
+        final nextIndex = _storyIndex + 1;
+
+        if (nextIndex >= widget.user.stories.length) {
+          Navigator.pop(context);
+          return;
+        }
+
+        _pageController.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final stories = widget.user.stories;
+    final currentStory = stories[_storyIndex];
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.78,
+      height: MediaQuery.of(context).size.height * 0.90,
       decoration: const BoxDecoration(
-        color: Color(0xFF101014),
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(30),
-        ),
+        color: Colors.black,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 12),
+
             Container(
               width: 42,
               height: 4,
@@ -1420,79 +1440,89 @@ class _ViewCanvas extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                18,
-                20,
-                12,
-              ),
+              padding: const EdgeInsets.fromLTRB(18, 14, 12, 10),
               child: Row(
                 children: [
-                  Text(
-                    view.emoji,
-                    style: const TextStyle(fontSize: 28),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.white12,
+                    backgroundImage: widget.user.photoUrl.isNotEmpty
+                        ? NetworkImage(widget.user.photoUrl)
+                        : null,
+                    child: widget.user.photoUrl.isEmpty
+                        ? Text(
+                            currentStory.emoji,
+                            style: const TextStyle(fontSize: 20),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    view.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                  Expanded(
+                    child: Text(
+                      widget.user.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  const Text(
-                    '2m',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 11,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF272038),
-                        Color(0xFF162C38),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+
+            SizedBox(
+              height: 4,
+              child: Row(
+                children: List.generate(stories.length, (index) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: index < _storyIndex
+                            ? Colors.white
+                            : index == _storyIndex
+                            ? Colors.white.withValues(
+                                alpha: _storyProgress.clamp(0.0, 1.0),
+                              )
+                            : Colors.white24,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      view.emoji,
-                      style: const TextStyle(fontSize: 90),
-                    ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                14,
-                20,
-                20,
+
+            const SizedBox(height: 10),
+
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: stories.length,
+                onPageChanged: _onStoryChanged,
+                itemBuilder: (context, index) {
+                  return _StoryMedia(story: stories[index]);
+                },
               ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
               child: Row(
                 children: [
-                  _button(Icons.favorite_border_rounded, 'React'),
+                  _viewerButton(Icons.favorite_border_rounded, 'React'),
                   const SizedBox(width: 8),
-                  _button(Icons.auto_awesome_rounded, 'ViewBack'),
+                  _viewerButton(Icons.auto_awesome_rounded, 'ViewBack'),
                   const SizedBox(width: 8),
-                  _button(Icons.share_outlined, 'Share'),
+                  _viewerButton(Icons.share_outlined, 'Share'),
                 ],
               ),
             ),
@@ -1502,24 +1532,18 @@ class _ViewCanvas extends StatelessWidget {
     );
   }
 
-  Widget _button(IconData icon, String label) {
+  Widget _viewerButton(IconData icon, String label) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 19,
-            ),
+            Icon(icon, color: Colors.white, size: 19),
             const SizedBox(height: 4),
             Text(
               label,
@@ -1533,6 +1557,156 @@ class _ViewCanvas extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _StoryMedia extends StatefulWidget {
+  final _GalaxyView story;
+
+  const _StoryMedia({required this.story});
+
+  @override
+  State<_StoryMedia> createState() => _StoryMediaState();
+}
+
+class _StoryMediaState extends State<_StoryMedia> {
+  VideoPlayerController? _controller;
+  bool _videoError = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.story.mediaType == 'video') {
+      _initVideo();
+    }
+  }
+
+  Future<void> _initVideo() async {
+    try {
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.story.mediaUrl),
+      );
+
+      _controller = controller;
+
+      await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      await controller.setLooping(true);
+      await controller.play();
+
+      setState(() {});
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _videoError = true;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.story.mediaUrl.isEmpty) {
+      return _errorView(Icons.broken_image_outlined);
+    }
+
+    if (widget.story.mediaType == 'video') {
+      return _buildVideo();
+    }
+
+    return Center(
+      child: InteractiveViewer(
+        minScale: 1,
+        maxScale: 3,
+        child: Image.network(
+          widget.story.mediaUrl,
+          fit: BoxFit.contain,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) {
+              return child;
+            }
+
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          },
+          errorBuilder: (_, __, ___) {
+            return _errorView(Icons.broken_image_outlined);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideo() {
+    if (_videoError) {
+      return _errorView(Icons.video_library_outlined);
+    }
+
+    final controller = _controller;
+
+    if (controller == null || !controller.value.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          if (controller.value.isPlaying) {
+            controller.pause();
+          } else {
+            controller.play();
+          }
+
+          setState(() {});
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: VideoPlayer(controller),
+            ),
+
+            AnimatedOpacity(
+              opacity: controller.value.isPlaying ? 0 : 1,
+              duration: const Duration(milliseconds: 180),
+              child: Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 38,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorView(IconData icon) {
+    return Center(child: Icon(icon, color: Colors.white54, size: 50));
   }
 }
 
@@ -1557,10 +1731,7 @@ class _MoodChip extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: selected
             ? const LinearGradient(
-                colors: [
-                  Color(0xFF7C3AED),
-                  Color(0xFF38BDF8),
-                ],
+                colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               )
@@ -1568,9 +1739,7 @@ class _MoodChip extends StatelessWidget {
         color: selected ? null : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: selected
-              ? Colors.transparent
-              : const Color(0xFFE4E2EC),
+          color: selected ? Colors.transparent : const Color(0xFFE4E2EC),
           width: 1.1,
         ),
         boxShadow: [
@@ -1588,22 +1757,15 @@ class _MoodChip extends StatelessWidget {
           AnimatedScale(
             scale: selected ? 1.08 : 1.0,
             duration: const Duration(milliseconds: 220),
-            child: Text(
-              icon,
-              style: const TextStyle(fontSize: 16),
-            ),
+            child: Text(icon, style: const TextStyle(fontSize: 16)),
           ),
           const SizedBox(width: 7),
           Text(
             label,
             style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : const Color(0xFF44444E),
+              color: selected ? Colors.white : const Color(0xFF44444E),
               fontSize: 12,
-              fontWeight: selected
-                  ? FontWeight.w900
-                  : FontWeight.w700,
+              fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
               letterSpacing: selected ? 0.15 : 0,
             ),
           ),
@@ -1704,9 +1866,7 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
               inactiveTrackColor: const Color(0xFFE8E6F0),
               thumbColor: const Color(0xFF38BDF8),
               overlayColor: const Color(0xFF7C3AED).withValues(alpha: 0.10),
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 8,
-              ),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),
             child: Slider(
               value: value,
@@ -1723,10 +1883,7 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
     );
   }
 
-  Widget _presetButton({
-    required String icon,
-    required String label,
-  }) {
+  Widget _presetButton({required String icon, required String label}) {
     final selected = preset == label;
 
     return Expanded(
@@ -1735,25 +1892,17 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           margin: const EdgeInsets.only(right: 7),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 5,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
           decoration: BoxDecoration(
             gradient: selected
                 ? const LinearGradient(
-                    colors: [
-                      Color(0xFF7C3AED),
-                      Color(0xFF38BDF8),
-                    ],
+                    colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                   )
                 : null,
             color: selected ? null : const Color(0xFFF7F6FA),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: selected
-                  ? Colors.transparent
-                  : const Color(0xFFE6E4ED),
+              color: selected ? Colors.transparent : const Color(0xFFE6E4ED),
             ),
           ),
           child: Column(
@@ -1766,9 +1915,7 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  color: selected
-                      ? Colors.white
-                      : const Color(0xFF555560),
+                  color: selected ? Colors.white : const Color(0xFF555560),
                 ),
               ),
             ],
@@ -1786,9 +1933,7 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(30),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -1813,10 +1958,7 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
                     height: 43,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF7C3AED),
-                          Color(0xFF38BDF8),
-                        ],
+                        colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -1933,16 +2075,12 @@ class _TuneViewSheetState extends State<_TuneViewSheet> {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF7C3AED),
-                        Color(0xFF38BDF8),
-                      ],
+                      colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
                     ),
                     borderRadius: BorderRadius.circular(17),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED)
-                            .withValues(alpha: 0.20),
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.20),
                         blurRadius: 16,
                         offset: const Offset(0, 7),
                       ),
@@ -2033,18 +2171,19 @@ class _PostCardState extends State<PostCard> {
 
     if (url.isEmpty) return;
 
-    final controller = VideoPlayerController.networkUrl(
-      Uri.parse(url),
-    );
+    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
 
     _videoController = controller;
-    _videoInitializeFuture = controller.initialize().then((_) {
-      if (!mounted) return;
-      controller.setLooping(true);
-      setState(() {});
-    }).catchError((error) {
-      debugPrint('Video initialization error: $error');
-    });
+    _videoInitializeFuture = controller
+        .initialize()
+        .then((_) {
+          if (!mounted) return;
+          controller.setLooping(true);
+          setState(() {});
+        })
+        .catchError((error) {
+          debugPrint('Video initialization error: $error');
+        });
   }
 
   @override
@@ -2194,7 +2333,10 @@ class _PostCardState extends State<PostCard> {
       final controller = _videoController;
       final future = _videoInitializeFuture;
       if (controller == null || future == null) {
-        return const SizedBox(height: 330, child: Center(child: CircularProgressIndicator()));
+        return const SizedBox(
+          height: 330,
+          child: Center(child: CircularProgressIndicator()),
+        );
       }
       return Container(
         height: 330,
@@ -2204,10 +2346,18 @@ class _PostCardState extends State<PostCard> {
           future: future,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
             }
             if (snapshot.hasError || !controller.value.isInitialized) {
-              return const Center(child: Icon(Icons.video_library_outlined, size: 70, color: Colors.grey));
+              return const Center(
+                child: Icon(
+                  Icons.video_library_outlined,
+                  size: 70,
+                  color: Colors.grey,
+                ),
+              );
             }
             return GestureDetector(
               onTap: () {
@@ -2235,7 +2385,11 @@ class _PostCardState extends State<PostCard> {
                     const CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.black54,
-                      child: Icon(Icons.play_arrow_rounded, size: 40, color: Colors.white),
+                      child: Icon(
+                        Icons.play_arrow_rounded,
+                        size: 40,
+                        color: Colors.white,
+                      ),
                     ),
                 ],
               ),
@@ -2256,8 +2410,16 @@ class _PostCardState extends State<PostCard> {
           width: double.infinity,
           height: 330,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, progress) => progress == null ? child : const Center(child: CircularProgressIndicator()),
-          errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image_outlined, size: 70, color: Colors.grey)),
+          loadingBuilder: (context, child, progress) => progress == null
+              ? child
+              : const Center(child: CircularProgressIndicator()),
+          errorBuilder: (context, error, stackTrace) => const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              size: 70,
+              color: Colors.grey,
+            ),
+          ),
         ),
       );
     }
