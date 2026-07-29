@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +8,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
+import '../../services/cloudinary_service.dart';
+import '../../services/story_service.dart';
 
 import '../create/create_post_screen.dart';
 import '../create/view_realm_screen.dart';
@@ -584,16 +587,60 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        onStory: () {
+        onStory: () async {
           setState(() {
             _createHubOpen = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Story View is coming soon ✨'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+
+          final picker = ImagePicker();
+
+          try {
+            final file = await picker.pickMedia();
+
+            if (file == null || !mounted) return;
+
+            final mediaFile = File(file.path);
+
+            final lowerPath = file.path.toLowerCase();
+
+            final isVideo =
+                lowerPath.endsWith('.mp4') ||
+                lowerPath.endsWith('.mov') ||
+                lowerPath.endsWith('.m4v') ||
+                lowerPath.endsWith('.webm');
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Uploading your Story... ☁️'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+
+            final url = await CloudinaryService.uploadFile(mediaFile);
+
+            await StoryService.createStory(
+              mediaUrl: url,
+              mediaType: isVideo ? 'video' : 'image',
+            );
+
+            if (!context.mounted) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Story uploaded successfully ✨'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } catch (e) {
+            if (!context.mounted) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Story upload failed: $e'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         },
       ),
     );
@@ -913,15 +960,45 @@ class _CreateHub extends StatelessWidget {
 }
 
 class _GalaxyView {
+  final String storyId;
+  final String userId;
   final String name;
+  final String username;
+  final String photoUrl;
+  final String mediaUrl;
+  final String mediaType;
   final String emoji;
   final bool live;
 
   const _GalaxyView({
+    required this.storyId,
+    required this.userId,
     required this.name,
-    required this.emoji,
+    required this.username,
+    required this.photoUrl,
+    required this.mediaUrl,
+    required this.mediaType,
     this.live = false,
+    this.emoji = '✨',
   });
+
+  factory _GalaxyView.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data() ?? {};
+
+    return _GalaxyView(
+      storyId: doc.id,
+      userId: data['userId'] as String? ?? '',
+      name: data['name'] as String? ?? 'User',
+      username: data['username'] as String? ?? '',
+      photoUrl: data['photoUrl'] as String? ?? '',
+      mediaUrl: data['mediaUrl'] as String? ?? '',
+      mediaType: data['mediaType'] as String? ?? 'image',
+      live: data['live'] as bool? ?? false,
+      emoji: data['emoji'] as String? ?? '✨',
+    );
+  }
 }
 
 class _ViewGalaxy extends StatefulWidget {
@@ -937,21 +1014,25 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
 
   int _selected = 0;
 
-  final List<_GalaxyView> _views = const [
-    _GalaxyView(name: 'Aisha', emoji: '🌸'),
-    _GalaxyView(name: 'Arman', emoji: '🌆', live: true),
-    _GalaxyView(name: 'Sara', emoji: '🌿'),
-    _GalaxyView(name: 'Zoya', emoji: '✨'),
-    _GalaxyView(name: 'Ali', emoji: '🏙️'),
-  ];
+  List<_GalaxyView> _views = [];
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> get _storyStream =>
+      FirebaseFirestore.instance
+          .collection('stories')
+          .where(
+            'expiresAt',
+            isGreaterThan: Timestamp.now(),
+          )
+          .orderBy('expiresAt')
+          .snapshots();
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 9),
-    )..repeat();
+      duration: const Duration(milliseconds: 450),
+    );
   }
 
   @override
@@ -961,12 +1042,20 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
   }
 
   void _next() {
+    if (_views.isEmpty) return;
+
+    _controller.forward(from: 0);
+
     setState(() {
       _selected = (_selected + 1) % _views.length;
     });
   }
 
   void _previous() {
+    if (_views.isEmpty) return;
+
+    _controller.reverse(from: 1);
+
     setState(() {
       _selected = (_selected - 1 + _views.length) % _views.length;
     });
@@ -992,7 +1081,24 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _storyStream,
+      builder: (context, snapshot) {
+        final views = snapshot.data?.docs
+                .map(_GalaxyView.fromFirestore)
+                .where((view) => view.mediaUrl.isNotEmpty)
+                .toList() ??
+            <_GalaxyView>[];
+
+        _views = views;
+
+        if (_views.isEmpty) {
+          _selected = 0;
+        } else if (_selected >= _views.length) {
+          _selected = 0;
+        }
+
+return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -1061,7 +1167,9 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
 
                       final angle =
                           baseAngle +
-                          (_controller.value * math.pi * 2);
+                          (_selected * (math.pi * 2 / _views.length)) +
+                          (_controller.value *
+                              (math.pi * 2 / _views.length));
 
                       const radius = 94.0;
 
@@ -1150,6 +1258,8 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
           ),
         ),
       ],
+    );
+      },
     );
   }
 }
