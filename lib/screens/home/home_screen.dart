@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -296,45 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 28),
 
-                    const Text(
-                      'MOMENTS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.1,
-                        color: Color(0xFF25252D),
-                      ),
-                    ),
-
-                    const SizedBox(height: 13),
-
-                    SizedBox(
-                      height: 142,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: const [
-                          _StoryCard(name: 'Your View', isYourStory: true),
-                          _StoryCard(name: 'Aisha', emoji: '🌸'),
-                          _StoryCard(name: 'Arman', emoji: '🌆', isLive: true),
-                          _StoryCard(name: 'Sara', emoji: '🌿'),
-                          _StoryCard(name: 'Zoya', emoji: '✨'),
-                          _StoryCard(name: 'Ali', emoji: '🏙️'),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    const Center(
-                      child: Text(
-                        '←  Swipe to explore views  →',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF9999A4),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    const _ViewGalaxy(),
 
                     const SizedBox(height: 22),
 
@@ -949,238 +912,515 @@ class _CreateHub extends StatelessWidget {
   }
 }
 
-class _StoryCard extends StatelessWidget {
+class _GalaxyView {
   final String name;
   final String emoji;
-  final bool isYourStory;
-  final bool isLive;
+  final bool live;
 
-  const _StoryCard({
+  const _GalaxyView({
     required this.name,
-    this.emoji = '👤',
-    this.isYourStory = false,
-    this.isLive = false,
+    required this.emoji,
+    this.live = false,
+  });
+}
+
+class _ViewGalaxy extends StatefulWidget {
+  const _ViewGalaxy({super.key});
+
+  @override
+  State<_ViewGalaxy> createState() => _ViewGalaxyState();
+}
+
+class _ViewGalaxyState extends State<_ViewGalaxy>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  int _selected = 0;
+
+  final List<_GalaxyView> _views = const [
+    _GalaxyView(name: 'Aisha', emoji: '🌸'),
+    _GalaxyView(name: 'Arman', emoji: '🌆', live: true),
+    _GalaxyView(name: 'Sara', emoji: '🌿'),
+    _GalaxyView(name: 'Zoya', emoji: '✨'),
+    _GalaxyView(name: 'Ali', emoji: '🏙️'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 9),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _next() {
+    setState(() {
+      _selected = (_selected + 1) % _views.length;
+    });
+  }
+
+  void _previous() {
+    setState(() {
+      _selected = (_selected - 1 + _views.length) % _views.length;
+    });
+  }
+
+  void _openView(_GalaxyView view) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ViewCanvas(view: view),
+    );
+  }
+
+  void _createView() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Your View creator will open here ✨'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'VIEW GALAXY',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+            color: Color(0xFF25252D),
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+
+            if (velocity < 0) {
+              _next();
+            } else if (velocity > 0) {
+              _previous();
+            }
+          },
+          child: SizedBox(
+            width: double.infinity,
+            height: 255,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 182,
+                      height: 182,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFF5EEFF),
+                            Color(0xFFE7F7FF),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF7C3AED)
+                                .withValues(alpha: 0.12),
+                            blurRadius: 35,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    CustomPaint(
+                      size: const Size(235, 235),
+                      painter: _GalaxyPainter(
+                        progress: _controller.value,
+                      ),
+                    ),
+
+                    ...List.generate(_views.length, (index) {
+                      final baseAngle =
+                          (index / _views.length) *
+                              math.pi *
+                              2;
+
+                      final angle =
+                          baseAngle +
+                          (_controller.value * math.pi * 2);
+
+                      const radius = 94.0;
+
+                      final offset = Offset(
+                        math.cos(angle) * radius,
+                        math.sin(angle) * radius,
+                      );
+
+                      return Transform.translate(
+                        offset: offset,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selected = index;
+                            });
+                            _openView(_views[index]);
+                          },
+                          child: _GalaxyAvatar(
+                            view: _views[index],
+                            selected: _selected == index,
+                          ),
+                        ),
+                      );
+                    }),
+
+                    GestureDetector(
+                      onTap: _createView,
+                      child: Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF7C3AED),
+                              Color(0xFF38BDF8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF7C3AED)
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 20,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'YOUR VIEW',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        const Center(
+          child: Text(
+            '✦ Swipe Galaxy • Tap a View to explore ✦',
+            style: TextStyle(
+              fontSize: 10.5,
+              color: Color(0xFF9999A4),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GalaxyAvatar extends StatelessWidget {
+  final _GalaxyView view;
+  final bool selected;
+
+  const _GalaxyAvatar({
+    required this.view,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: selected ? 70 : 60,
+          height: selected ? 70 : 60,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: view.live
+                  ? const [
+                      Color(0xFFFF3B5C),
+                      Color(0xFFFF9F43),
+                    ]
+                  : const [
+                      Color(0xFF7C3AED),
+                      Color(0xFF38BDF8),
+                    ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF7C3AED)
+                    .withValues(alpha: selected ? 0.28 : 0.12),
+                blurRadius: selected ? 16 : 8,
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: Center(
+              child: Text(
+                view.emoji,
+                style: TextStyle(
+                  fontSize: selected ? 27 : 23,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          view.name,
+          style: const TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF303039),
+          ),
+        ),
+        if (view.live)
+          const Text(
+            '● LIVE',
+            style: TextStyle(
+              color: Color(0xFFFF3B5C),
+              fontSize: 7,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _GalaxyPainter extends CustomPainter {
+  final double progress;
+
+  const _GalaxyPainter({
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(
+      size.width / 2,
+      size.height / 2,
+    );
+
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = const Color(0xFF7C3AED)
+          .withValues(alpha: 0.16);
+
+    canvas.drawCircle(
+      center,
+      94,
+      ringPaint,
+    );
+
+    final angle = progress * math.pi * 2;
+
+    final dot = Offset(
+      center.dx + math.cos(angle) * 94,
+      center.dy + math.sin(angle) * 94,
+    );
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFF38BDF8);
+
+    canvas.drawCircle(
+      dot,
+      4,
+      dotPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _GalaxyPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _ViewCanvas extends StatelessWidget {
+  final _GalaxyView view;
+
+  const _ViewCanvas({
+    required this.view,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 102,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // ✨ Viewgram Create Ring
-              Container(
-                height: 108,
-                width: 102,
-                padding: const EdgeInsets.all(2.5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: LinearGradient(
-                    colors: isYourStory
-                        ? const [
-                            Color(0xFF7C3AED),
-                            Color(0xFF38BDF8),
-                            Color(0xFF7C3AED),
-                          ]
-                        : const [
-                            Color(0xFFE9D5FF),
-                            Color(0xFFBAE6FD),
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      height: MediaQuery.of(context).size.height * 0.78,
+      decoration: const BoxDecoration(
+        color: Color(0xFF101014),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                18,
+                20,
+                12,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    view.emoji,
+                    style: const TextStyle(fontSize: 28),
                   ),
-                  boxShadow: [
-                    if (isYourStory)
-                      BoxShadow(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.22),
-                        blurRadius: 16,
-                        offset: const Offset(0, 7),
-                      ),
-                  ],
-                ),
+                  const SizedBox(width: 10),
+                  Text(
+                    view.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    '2m',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 22,
                   ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 67,
-                          height: 67,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: isYourStory
-                                  ? const [
-                                      Color(0xFFF3E8FF),
-                                      Color(0xFFE0F2FE),
-                                    ]
-                                  : const [
-                                      Color(0xFFF8F5FF),
-                                      Color(0xFFF0F9FF),
-                                    ],
-                          ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              emoji,
-                              style: const TextStyle(fontSize: 32),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 🔴 Pulse LIVE badge
-                      if (isLive)
-                        Positioned(
-                          top: 7,
-                          left: 7,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF3B5C),
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B5C)
-                                      .withValues(alpha: 0.28),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  color: Colors.white,
-                                  size: 5,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'LIVE',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.6,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      // ✨ Create Ring + button
-                      if (isYourStory)
-                        Positioned(
-                          right: 6,
-                          bottom: 6,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF7C3AED),
-                                  Color(0xFF38BDF8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF7C3AED)
-                                      .withValues(alpha: 0.25),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.add_rounded,
-                              color: Colors.white,
-                              size: 21,
-                            ),
-                          ),
-                        ),
-                    ],
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF272038),
+                        Color(0xFF162C38),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      view.emoji,
+                      style: const TextStyle(fontSize: 90),
+                    ),
                   ),
                 ),
               ),
-
-              // ✦ Your View mini badge
-              if (isYourStory)
-                Positioned(
-                  top: -7,
-                  left: 15,
-                  right: 15,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF7C3AED),
-                          Color(0xFF38BDF8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF7C3AED)
-                              .withValues(alpha: 0.18),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '✦ YOUR VIEW',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.7,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 9),
-
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isYourStory ? FontWeight.w900 : FontWeight.w700,
-              color: isYourStory
-                  ? const Color(0xFF7C3AED)
-                  : const Color(0xFF303039),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                14,
+                20,
+                20,
+              ),
+              child: Row(
+                children: [
+                  _button(Icons.favorite_border_rounded, 'React'),
+                  const SizedBox(width: 8),
+                  _button(Icons.auto_awesome_rounded, 'ViewBack'),
+                  const SizedBox(width: 8),
+                  _button(Icons.share_outlined, 'Share'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _button(IconData icon, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 19,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
