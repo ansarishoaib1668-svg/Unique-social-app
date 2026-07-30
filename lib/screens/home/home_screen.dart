@@ -511,8 +511,8 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _createHubOpen = false;
           });
-          Navigator.push(
-            context,
+          Navigator.of(context).push(
+
             MaterialPageRoute(builder: (_) => const CreatePostScreen()),
           );
         },
@@ -524,11 +524,15 @@ class _HomeScreenState extends State<HomeScreen> {
           final picker = ImagePicker();
           final video = await picker.pickVideo(source: ImageSource.gallery);
 
-          if (!context.mounted || video == null) return;
+          if (!mounted || video == null) return;
 
           final user = FirebaseAuth.instance.currentUser;
           if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+
+            final messenger = ScaffoldMessenger.of(this.context);
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Reel banane ke liye login zaroori hai.'),
                 behavior: SnackBarBehavior.floating,
@@ -549,11 +553,10 @@ class _HomeScreenState extends State<HomeScreen> {
             'status': 'draft',
           });
 
-          if (!context.mounted) return;
+          if (!mounted) return;
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
+          Navigator.of(context).push(
+              MaterialPageRoute(
               builder: (_) =>
                   ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
             ),
@@ -581,7 +584,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 lowerPath.endsWith('.m4v') ||
                 lowerPath.endsWith('.webm');
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+
+            final messenger = ScaffoldMessenger.of(this.context);
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Uploading your Story... ☁️'),
                 behavior: SnackBarBehavior.floating,
@@ -590,23 +597,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
             final url = await CloudinaryService.uploadFile(mediaFile);
 
+            if (!mounted) return;
+
             await StoryService.createStory(
               mediaUrl: url,
               mediaType: isVideo ? 'video' : 'image',
             );
 
-            if (!context.mounted) return;
+            if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               const SnackBar(
                 content: Text('Story uploaded successfully ✨'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
           } catch (e) {
-            if (!context.mounted) return;
+            if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(
                 content: Text('Story upload failed: $e'),
                 behavior: SnackBarBehavior.floating,
@@ -1016,7 +1025,7 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
   }
 
   void _createView() {
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Your View creator will open here ✨'),
         behavior: SnackBarBehavior.floating,
@@ -2247,7 +2256,7 @@ class _PostCardState extends State<PostCard> {
     if (uid == null) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Please login to like posts.')),
       );
 
@@ -2292,7 +2301,7 @@ class _PostCardState extends State<PostCard> {
         feelCount = wasLiked ? feelCount + 1 : feelCount - 1;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Could not update like. Try again.')),
       );
     } finally {
@@ -2476,7 +2485,7 @@ class _PostCardState extends State<PostCard> {
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Could not add comment. Try again.')),
       );
     }
