@@ -1437,7 +1437,7 @@ class _ViewCanvasState extends State<_ViewCanvas> {
     final currentStory = stories[_storyIndex];
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.90,
+      height: MediaQuery.of(context).size.height,
       decoration: const BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
