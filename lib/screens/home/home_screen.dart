@@ -521,6 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _createHubOpen = false;
           });
 
+            final navigator = Navigator.of(context);
           final picker = ImagePicker();
           final video = await picker.pickVideo(source: ImageSource.gallery);
 
@@ -555,10 +556,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (!mounted) return;
 
-          Navigator.of(context).push(
-              MaterialPageRoute(
-              builder: (_) =>
-                  ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => ViewRealmScreen(
+                videoPath: video.path,
+                realmId: realmRef.id,
+              ),
             ),
           );
         },
@@ -1347,6 +1350,7 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   Timer? _storyTimer;
   int _storyIndex = 0;
   double _storyProgress = 0.0;
+  bool _isPaused = false;
 
   @override
   void initState() {
@@ -1399,6 +1403,8 @@ class _ViewCanvasState extends State<_ViewCanvas> {
         timer.cancel();
         return;
       }
+
+      if (_isPaused) return;
 
       currentTick++;
 
@@ -1513,13 +1519,55 @@ class _ViewCanvasState extends State<_ViewCanvas> {
             const SizedBox(height: 10),
 
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: stories.length,
-                onPageChanged: _onStoryChanged,
-                itemBuilder: (context, index) {
-                  return _StoryMedia(story: stories[index]);
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onLongPressStart: (_) {
+                  setState(() => _isPaused = true);
                 },
+                onLongPressEnd: (_) {
+                  setState(() => _isPaused = false);
+                },
+                onTapUp: (details) {
+                  final width = MediaQuery.of(context).size.width;
+
+                  if (details.localPosition.dx < width / 2) {
+                    if (_storyIndex > 0) {
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  } else {
+                    if (_storyIndex < stories.length - 1) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                      );
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: stories.length,
+                  onPageChanged: _onStoryChanged,
+                  itemBuilder: (context, index) {
+                    return _StoryMedia(
+                      story: stories[index],
+                      onVideoFinished: () {
+                        if (_storyIndex < stories.length - 1) {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOut,
+                          );
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                    );
+                  },
+                ),
               ),
             ),
 
@@ -1571,8 +1619,12 @@ class _ViewCanvasState extends State<_ViewCanvas> {
 
 class _StoryMedia extends StatefulWidget {
   final _GalaxyView story;
+  final VoidCallback onVideoFinished;
 
-  const _StoryMedia({required this.story});
+  const _StoryMedia({
+    required this.story,
+    required this.onVideoFinished,
+  });
 
   @override
   State<_StoryMedia> createState() => _StoryMediaState();
@@ -1581,6 +1633,7 @@ class _StoryMedia extends StatefulWidget {
 class _StoryMediaState extends State<_StoryMedia> {
   VideoPlayerController? _controller;
   bool _videoError = false;
+    bool _videoFinishedCalled = false;
 
   @override
   void initState() {
@@ -1606,7 +1659,16 @@ class _StoryMediaState extends State<_StoryMedia> {
         return;
       }
 
-      await controller.setLooping(true);
+      controller.addListener(() {
+          if (!_videoFinishedCalled &&
+              controller.value.isInitialized &&
+              controller.value.position >= controller.value.duration) {
+            _videoFinishedCalled = true;
+            widget.onVideoFinished();
+          }
+        });
+
+        await controller.setLooping(false);
       await controller.play();
 
       setState(() {});
