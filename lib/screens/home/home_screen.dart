@@ -1573,13 +1573,61 @@ class _ViewCanvasState extends State<_ViewCanvas> {
 
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-              child: Row(
+              child: Column(
                 children: [
-                  _viewerButton(Icons.favorite_border_rounded, 'React'),
-                  const SizedBox(width: 8),
-                  _viewerButton(Icons.auto_awesome_rounded, 'ViewBack'),
-                  const SizedBox(width: 8),
-                  _viewerButton(Icons.share_outlined, 'Share'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _reactionEmoji('✨'),
+                      _reactionEmoji('❤️'),
+                      _reactionEmoji('🔥'),
+                      _reactionEmoji('😍'),
+                      _reactionEmoji('⚡'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Text(
+                            '💬  Share your view...',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white12,
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '✦➤',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1589,34 +1637,52 @@ class _ViewCanvasState extends State<_ViewCanvas> {
     );
   }
 
-  Widget _viewerButton(IconData icon, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: Colors.white, size: 19),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-              ),
+
+  String? _selectedReaction;
+
+  Widget _reactionEmoji(String emoji) {
+    final selected = _selectedReaction == emoji;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedReaction = emoji;
+        });
+      },
+      child: AnimatedScale(
+        scale: selected ? 1.25 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.transparent,
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : [],
+          ),
+          child: Text(
+            emoji,
+            style: TextStyle(
+              fontSize: selected ? 26 : 22,
             ),
-          ],
+          ),
         ),
       ),
     );
   }
-}
 
+
+}
 class _StoryMedia extends StatefulWidget {
   final _GalaxyView story;
   final VoidCallback onVideoFinished;
