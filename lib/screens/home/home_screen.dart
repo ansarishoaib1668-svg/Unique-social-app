@@ -511,17 +511,16 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _createHubOpen = false;
           });
-          Navigator.of(context).push(
-
-            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const CreatePostScreen()));
         },
         onReel: () async {
           setState(() {
             _createHubOpen = false;
           });
 
-            final navigator = Navigator.of(context);
+          final navigator = Navigator.of(context);
           final picker = ImagePicker();
           final video = await picker.pickVideo(source: ImageSource.gallery);
 
@@ -558,10 +557,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
           navigator.push(
             MaterialPageRoute(
-              builder: (_) => ViewRealmScreen(
-                videoPath: video.path,
-                realmId: realmRef.id,
-              ),
+              builder: (_) =>
+                  ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
             ),
           );
         },
@@ -1352,6 +1349,9 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   double _storyProgress = 0.0;
   bool _isPaused = false;
 
+  final TextEditingController _replyController = TextEditingController();
+  bool _hasReplyText = false;
+
   @override
   void initState() {
     super.initState();
@@ -1369,6 +1369,7 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   void dispose() {
     _storyTimer?.cancel();
     _pageController.dispose();
+    _replyController.dispose();
     super.dispose();
   }
 
@@ -1591,38 +1592,63 @@ class _ViewCanvasState extends State<_ViewCanvas> {
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                        child: TextField(
+                          controller: _replyController,
+                          onChanged: (value) {
+                            setState(() {
+                              _hasReplyText = value.isNotEmpty;
+                            });
+                          },
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: const Text(
-                            '💬  Share your view...',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
+                          decoration: InputDecoration(
+                            hintText: '💬 Share your view...',
+                            hintStyle: const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.white12,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(width: 10),
 
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white12,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '✦➤',
-                            style: TextStyle(fontSize: 20),
+                      GestureDetector(
+                        onTap: () {
+                          final reply = _replyController.text.trim();
+
+                          if (reply.isEmpty) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Reply sent: $reply'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+
+                          _replyController.clear();
+
+                          setState(() {
+                            _hasReplyText = false;
+                          });
+                        },
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white12,
+                          ),
+                          child: const Center(
+                            child: Text('✦➤', style: TextStyle(fontSize: 20)),
                           ),
                         ),
                       ),
@@ -1636,7 +1662,6 @@ class _ViewCanvasState extends State<_ViewCanvas> {
       ),
     );
   }
-
 
   String? _selectedReaction;
 
@@ -1670,27 +1695,18 @@ class _ViewCanvasState extends State<_ViewCanvas> {
                   ]
                 : [],
           ),
-          child: Text(
-            emoji,
-            style: TextStyle(
-              fontSize: selected ? 26 : 22,
-            ),
-          ),
+          child: Text(emoji, style: TextStyle(fontSize: selected ? 26 : 22)),
         ),
       ),
     );
   }
-
-
 }
+
 class _StoryMedia extends StatefulWidget {
   final _GalaxyView story;
   final VoidCallback onVideoFinished;
 
-  const _StoryMedia({
-    required this.story,
-    required this.onVideoFinished,
-  });
+  const _StoryMedia({required this.story, required this.onVideoFinished});
 
   @override
   State<_StoryMedia> createState() => _StoryMediaState();
@@ -1699,7 +1715,7 @@ class _StoryMedia extends StatefulWidget {
 class _StoryMediaState extends State<_StoryMedia> {
   VideoPlayerController? _controller;
   bool _videoError = false;
-    bool _videoFinishedCalled = false;
+  bool _videoFinishedCalled = false;
 
   @override
   void initState() {
@@ -1726,15 +1742,15 @@ class _StoryMediaState extends State<_StoryMedia> {
       }
 
       controller.addListener(() {
-          if (!_videoFinishedCalled &&
-              controller.value.isInitialized &&
-              controller.value.position >= controller.value.duration) {
-            _videoFinishedCalled = true;
-            widget.onVideoFinished();
-          }
-        });
+        if (!_videoFinishedCalled &&
+            controller.value.isInitialized &&
+            controller.value.position >= controller.value.duration) {
+          _videoFinishedCalled = true;
+          widget.onVideoFinished();
+        }
+      });
 
-        await controller.setLooping(false);
+      await controller.setLooping(false);
       await controller.play();
 
       setState(() {});
