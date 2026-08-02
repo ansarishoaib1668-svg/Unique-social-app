@@ -511,24 +511,28 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _createHubOpen = false;
           });
-          Navigator.push(
+          Navigator.of(
             context,
-            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-          );
+          ).push(MaterialPageRoute(builder: (_) => const CreatePostScreen()));
         },
         onReel: () async {
           setState(() {
             _createHubOpen = false;
           });
 
+          final navigator = Navigator.of(context);
           final picker = ImagePicker();
           final video = await picker.pickVideo(source: ImageSource.gallery);
 
-          if (!context.mounted || video == null) return;
+          if (!mounted || video == null) return;
 
           final user = FirebaseAuth.instance.currentUser;
           if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+
+            final messenger = ScaffoldMessenger.of(this.context);
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Reel banane ke liye login zaroori hai.'),
                 behavior: SnackBarBehavior.floating,
@@ -549,10 +553,9 @@ class _HomeScreenState extends State<HomeScreen> {
             'status': 'draft',
           });
 
-          if (!context.mounted) return;
+          if (!mounted) return;
 
-          Navigator.push(
-            context,
+          navigator.push(
             MaterialPageRoute(
               builder: (_) =>
                   ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
@@ -581,7 +584,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 lowerPath.endsWith('.m4v') ||
                 lowerPath.endsWith('.webm');
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+
+            final messenger = ScaffoldMessenger.of(this.context);
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Uploading your Story... ☁️'),
                 behavior: SnackBarBehavior.floating,
@@ -590,23 +597,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
             final url = await CloudinaryService.uploadFile(mediaFile);
 
+            if (!mounted) return;
+
             await StoryService.createStory(
               mediaUrl: url,
               mediaType: isVideo ? 'video' : 'image',
             );
 
-            if (!context.mounted) return;
+            if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               const SnackBar(
                 content: Text('Story uploaded successfully ✨'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
           } catch (e) {
-            if (!context.mounted) return;
+            if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(
                 content: Text('Story upload failed: $e'),
                 behavior: SnackBarBehavior.floating,
@@ -1016,7 +1025,7 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
   }
 
   void _createView() {
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Your View creator will open here ✨'),
         behavior: SnackBarBehavior.floating,
@@ -1338,6 +1347,10 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   Timer? _storyTimer;
   int _storyIndex = 0;
   double _storyProgress = 0.0;
+  bool _isPaused = false;
+
+  final TextEditingController _replyController = TextEditingController();
+  bool _hasReplyText = false;
 
   @override
   void initState() {
@@ -1356,6 +1369,7 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   void dispose() {
     _storyTimer?.cancel();
     _pageController.dispose();
+    _replyController.dispose();
     super.dispose();
   }
 
@@ -1391,6 +1405,8 @@ class _ViewCanvasState extends State<_ViewCanvas> {
         return;
       }
 
+      if (_isPaused) return;
+
       currentTick++;
 
       setState(() {
@@ -1422,7 +1438,7 @@ class _ViewCanvasState extends State<_ViewCanvas> {
     final currentStory = stories[_storyIndex];
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.90,
+      height: MediaQuery.of(context).size.height,
       decoration: const BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -1504,25 +1520,147 @@ class _ViewCanvasState extends State<_ViewCanvas> {
             const SizedBox(height: 10),
 
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: stories.length,
-                onPageChanged: _onStoryChanged,
-                itemBuilder: (context, index) {
-                  return _StoryMedia(story: stories[index]);
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onLongPressStart: (_) {
+                  setState(() => _isPaused = true);
                 },
+                onLongPressEnd: (_) {
+                  setState(() => _isPaused = false);
+                },
+                onTapUp: (details) {
+                  final width = MediaQuery.of(context).size.width;
+
+                  if (details.localPosition.dx < width / 2) {
+                    if (_storyIndex > 0) {
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  } else {
+                    if (_storyIndex < stories.length - 1) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                      );
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: stories.length,
+                  onPageChanged: _onStoryChanged,
+                  itemBuilder: (context, index) {
+                    return _StoryMedia(
+                      story: stories[index],
+                      onVideoFinished: () {
+                        if (_storyIndex < stories.length - 1) {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOut,
+                          );
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                    );
+                  },
+                ),
               ),
             ),
 
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-              child: Row(
+              child: Column(
                 children: [
-                  _viewerButton(Icons.favorite_border_rounded, 'React'),
-                  const SizedBox(width: 8),
-                  _viewerButton(Icons.auto_awesome_rounded, 'ViewBack'),
-                  const SizedBox(width: 8),
-                  _viewerButton(Icons.share_outlined, 'Share'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _reactionEmoji('✨'),
+                      _reactionEmoji('❤️'),
+                      _reactionEmoji('🔥'),
+                      _reactionEmoji('😍'),
+                      _reactionEmoji('⚡'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _replyController,
+                          onChanged: (value) {
+                            setState(() {
+                              _hasReplyText = value.isNotEmpty;
+                            });
+                          },
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '💬 Share your view...',
+                            hintStyle: const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.white12,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                        GestureDetector(
+                          onTap: () async {
+                            final reply = _replyController.text.trim();
+
+                            if (reply.isEmpty) return;
+
+                            await StoryService.sendReply(
+                              storyId: stories[_storyIndex].storyId,
+                              message: reply,
+                            );
+
+                            if (!mounted) return;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Reply sent'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+
+                            _replyController.clear();
+
+                            setState(() {
+                              _hasReplyText = false;
+                            });
+                          },
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white12,
+                          ),
+                          child: const Center(
+                            child: Text('✦➤', style: TextStyle(fontSize: 20)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1532,28 +1670,39 @@ class _ViewCanvasState extends State<_ViewCanvas> {
     );
   }
 
-  Widget _viewerButton(IconData icon, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: Colors.white, size: 19),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+  String? _selectedReaction;
+
+  Widget _reactionEmoji(String emoji) {
+    final selected = _selectedReaction == emoji;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedReaction = emoji;
+        });
+      },
+      child: AnimatedScale(
+        scale: selected ? 1.25 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.transparent,
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : [],
+          ),
+          child: Text(emoji, style: TextStyle(fontSize: selected ? 26 : 22)),
         ),
       ),
     );
@@ -1562,8 +1711,9 @@ class _ViewCanvasState extends State<_ViewCanvas> {
 
 class _StoryMedia extends StatefulWidget {
   final _GalaxyView story;
+  final VoidCallback onVideoFinished;
 
-  const _StoryMedia({required this.story});
+  const _StoryMedia({required this.story, required this.onVideoFinished});
 
   @override
   State<_StoryMedia> createState() => _StoryMediaState();
@@ -1572,6 +1722,7 @@ class _StoryMedia extends StatefulWidget {
 class _StoryMediaState extends State<_StoryMedia> {
   VideoPlayerController? _controller;
   bool _videoError = false;
+  bool _videoFinishedCalled = false;
 
   @override
   void initState() {
@@ -1597,7 +1748,16 @@ class _StoryMediaState extends State<_StoryMedia> {
         return;
       }
 
-      await controller.setLooping(true);
+      controller.addListener(() {
+        if (!_videoFinishedCalled &&
+            controller.value.isInitialized &&
+            controller.value.position >= controller.value.duration) {
+          _videoFinishedCalled = true;
+          widget.onVideoFinished();
+        }
+      });
+
+      await controller.setLooping(false);
       await controller.play();
 
       setState(() {});
@@ -2247,7 +2407,7 @@ class _PostCardState extends State<PostCard> {
     if (uid == null) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Please login to like posts.')),
       );
 
@@ -2292,7 +2452,7 @@ class _PostCardState extends State<PostCard> {
         feelCount = wasLiked ? feelCount + 1 : feelCount - 1;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Could not update like. Try again.')),
       );
     } finally {
@@ -2476,7 +2636,7 @@ class _PostCardState extends State<PostCard> {
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Could not add comment. Try again.')),
       );
     }
