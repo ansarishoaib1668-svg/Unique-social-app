@@ -19,7 +19,7 @@ class _StreamTab extends StatelessWidget {
   final String label;
   final bool selected;
 
-  const _StreamTab({required this.label, this.selected = false});
+  const _StreamTab({required label, selected = false});
 
   IconData get _icon {
     switch (label) {
@@ -109,9 +109,9 @@ class _VibeCard extends StatelessWidget {
   final String viewers;
 
   const _VibeCard({
-    required this.emoji,
-    required this.title,
-    required this.viewers,
+    required emoji,
+    required title,
+    required viewers,
   });
 
   @override
@@ -530,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (user == null) {
             if (!mounted) return;
 
-            final messenger = ScaffoldMessenger.of(this.context);
+            final messenger = ScaffoldMessenger.of(context);
 
             messenger.showSnackBar(
               const SnackBar(
@@ -586,7 +586,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             if (!mounted) return;
 
-            final messenger = ScaffoldMessenger.of(this.context);
+            final messenger = ScaffoldMessenger.of(context);
 
             messenger.showSnackBar(
               const SnackBar(
@@ -606,7 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             if (!mounted) return;
 
-            ScaffoldMessenger.of(this.context).showSnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Story uploaded successfully ✨'),
                 behavior: SnackBarBehavior.floating,
@@ -615,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
           } catch (e) {
             if (!mounted) return;
 
-            ScaffoldMessenger.of(this.context).showSnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Story upload failed: $e'),
                 behavior: SnackBarBehavior.floating,
@@ -736,11 +736,11 @@ class _CreateHub extends StatelessWidget {
   final VoidCallback onStory;
 
   const _CreateHub({
-    required this.open,
-    required this.onToggle,
-    required this.onPhoto,
-    required this.onReel,
-    required this.onStory,
+    required open,
+    required onToggle,
+    required onPhoto,
+    required onReel,
+    required onStory,
   });
 
   Widget _option({
@@ -908,15 +908,15 @@ class _GalaxyView {
   final bool live;
 
   const _GalaxyView({
-    required this.storyId,
-    required this.userId,
-    required this.name,
-    required this.username,
-    required this.photoUrl,
-    required this.mediaUrl,
-    required this.mediaType,
-    this.live = false,
-    this.emoji = '✨',
+    required storyId,
+    required userId,
+    required name,
+    required username,
+    required photoUrl,
+    required mediaUrl,
+    required mediaType,
+    live = false,
+    emoji = '✨',
   });
 
   factory _GalaxyView.fromFirestore(
@@ -947,12 +947,12 @@ class _GalaxyUser {
   final List<_GalaxyView> stories;
 
   const _GalaxyUser({
-    required this.userId,
-    required this.name,
-    required this.username,
-    required this.photoUrl,
-    required this.live,
-    required this.stories,
+    required userId,
+    required name,
+    required username,
+    required photoUrl,
+    required live,
+    required stories,
   });
 
   _GalaxyView get preview => stories.first;
@@ -1025,7 +1025,7 @@ class _ViewGalaxyState extends State<_ViewGalaxy>
   }
 
   void _createView() {
-    ScaffoldMessenger.of(this.context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Your View creator will open here ✨'),
         behavior: SnackBarBehavior.floating,
@@ -1235,7 +1235,7 @@ class _GalaxyAvatar extends StatelessWidget {
   final _GalaxyUser view;
   final bool selected;
 
-  const _GalaxyAvatar({required this.view, required this.selected});
+  const _GalaxyAvatar({required view, required selected});
 
   @override
   Widget build(BuildContext context) {
@@ -1302,7 +1302,7 @@ class _GalaxyAvatar extends StatelessWidget {
 class _GalaxyPainter extends CustomPainter {
   final double progress;
 
-  const _GalaxyPainter({required this.progress});
+  const _GalaxyPainter({required progress});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1336,7 +1336,7 @@ class _GalaxyPainter extends CustomPainter {
 class _ViewCanvas extends StatefulWidget {
   final _GalaxyUser user;
 
-  const _ViewCanvas({required this.user});
+  const _ViewCanvas({required user});
 
   @override
   State<_ViewCanvas> createState() => _ViewCanvasState();
@@ -1350,7 +1350,6 @@ class _ViewCanvasState extends State<_ViewCanvas> {
   bool _isPaused = false;
 
   final TextEditingController _replyController = TextEditingController();
-  bool _hasReplyText = false;
 
   @override
   void initState() {
@@ -1596,7 +1595,6 @@ class _ViewCanvasState extends State<_ViewCanvas> {
                           controller: _replyController,
                           onChanged: (value) {
                             setState(() {
-                              _hasReplyText = value.isNotEmpty;
                             });
                           },
                           style: const TextStyle(
@@ -1644,7 +1642,6 @@ class _ViewCanvasState extends State<_ViewCanvas> {
                             _replyController.clear();
 
                             setState(() {
-                              _hasReplyText = false;
                             });
                           },
                         child: Container(
@@ -1713,7 +1710,7 @@ class _StoryMedia extends StatefulWidget {
   final _GalaxyView story;
   final VoidCallback onVideoFinished;
 
-  const _StoryMedia({required this.story, required this.onVideoFinished});
+  const _StoryMedia({required story, required onVideoFinished});
 
   @override
   State<_StoryMedia> createState() => _StoryMediaState();
@@ -1802,7 +1799,7 @@ class _StoryMediaState extends State<_StoryMedia> {
               child: CircularProgressIndicator(color: Colors.white),
             );
           },
-          errorBuilder: (_, __, ___) {
+          errorBuilder: (_, error, stackTrace) {
             return _errorView(Icons.broken_image_outlined);
           },
         ),
@@ -1876,9 +1873,9 @@ class _MoodChip extends StatelessWidget {
   final bool selected;
 
   const _MoodChip({
-    required this.icon,
-    required this.label,
-    this.selected = false,
+    required icon,
+    required label,
+    selected = false,
   });
 
   @override
@@ -2282,11 +2279,11 @@ class PostCard extends StatefulWidget {
 
   const PostCard({
     super.key,
-    required this.postId,
-    required this.user,
-    required this.caption,
-    this.imageUrl = '',
-    this.videoUrl = '',
+    required postId,
+    required user,
+    required caption,
+    imageUrl = '',
+    videoUrl = '',
   });
 
   @override
@@ -2407,7 +2404,7 @@ class _PostCardState extends State<PostCard> {
     if (uid == null) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please login to like posts.')),
       );
 
@@ -2452,7 +2449,7 @@ class _PostCardState extends State<PostCard> {
         feelCount = wasLiked ? feelCount + 1 : feelCount - 1;
       });
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not update like. Try again.')),
       );
     } finally {
@@ -2636,7 +2633,7 @@ class _PostCardState extends State<PostCard> {
         }
       });
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not add comment. Try again.')),
       );
     }
