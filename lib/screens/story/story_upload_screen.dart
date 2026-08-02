@@ -18,6 +18,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
 
   bool _uploading = false;
 
+
   Future<void> _pickMedia(ImageSource source) async {
     final XFile? file = await _picker.pickMedia();
 
@@ -32,14 +33,12 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
 
       final url = await CloudinaryService.uploadFile(mediaFile);
 
-      final mediaType = file.path.toLowerCase().endsWith('.mp4') ||
-              file.path.toLowerCase().endsWith('.mov')
-          ? 'video'
-          : 'image';
-
       await StoryService.createStory(
         mediaUrl: url,
-        mediaType: mediaType,
+        mediaType: file.path.toLowerCase().endsWith('.mp4') ||
+              file.path.toLowerCase().endsWith('.mov')
+          ? 'video'
+          : 'image',
       );
 
       if (!mounted) return;
@@ -51,6 +50,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
       );
 
       Navigator.pop(context);
+
     } catch (e) {
       if (!mounted) return;
 
@@ -67,7 +67,6 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -10,16 +10,20 @@ import 'package:video_player/video_player.dart';
 import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/cloudinary_service.dart';
-import '../../services/story_service.dart';
 
 import '../create/create_post_screen.dart';
 import '../create/view_realm_screen.dart';
+import '../profile/profile_screen.dart';
+import '../pulse/pulse_screen.dart';
 
 class _StreamTab extends StatelessWidget {
   final String label;
   final bool selected;
 
-  const _StreamTab({required this.label, this.selected = false});
+  const _StreamTab({
+    required this.label,
+    this.selected = false,
+  });
 
   IconData get _icon {
     switch (label) {
@@ -236,17 +240,42 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-                        _topIcon(
-                          Icons.notifications_none_rounded,
-                          onTap: () {},
-                          accent: const Color(0xFF7C3AED),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PulseScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "✦ Pulse",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF7C3AED),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        _topIcon(
-                          Icons.person_outline_rounded,
-                          onTap: () {},
-                          accent: const Color(0xFF38BDF8),
-                          profile: true,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfileScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Me",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF38BDF8),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -286,7 +315,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 28),
 
-                    const _ViewGalaxy(),
 
                     const SizedBox(height: 22),
 
@@ -530,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (user == null) {
             if (!mounted) return;
 
-            final messenger = ScaffoldMessenger.of(this.context);
+            final messenger = ScaffoldMessenger.of(context);
 
             messenger.showSnackBar(
               const SnackBar(
@@ -561,67 +589,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ViewRealmScreen(videoPath: video.path, realmId: realmRef.id),
             ),
           );
-        },
-        onStory: () async {
-          setState(() {
-            _createHubOpen = false;
-          });
-
-          final picker = ImagePicker();
-
-          try {
-            final file = await picker.pickMedia();
-
-            if (file == null || !mounted) return;
-
-            final mediaFile = File(file.path);
-
-            final lowerPath = file.path.toLowerCase();
-
-            final isVideo =
-                lowerPath.endsWith('.mp4') ||
-                lowerPath.endsWith('.mov') ||
-                lowerPath.endsWith('.m4v') ||
-                lowerPath.endsWith('.webm');
-
-            if (!mounted) return;
-
-            final messenger = ScaffoldMessenger.of(this.context);
-
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Uploading your Story... ☁️'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-
-            final url = await CloudinaryService.uploadFile(mediaFile);
-
-            if (!mounted) return;
-
-            await StoryService.createStory(
-              mediaUrl: url,
-              mediaType: isVideo ? 'video' : 'image',
-            );
-
-            if (!mounted) return;
-
-            ScaffoldMessenger.of(this.context).showSnackBar(
-              const SnackBar(
-                content: Text('Story uploaded successfully ✨'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          } catch (e) {
-            if (!mounted) return;
-
-            ScaffoldMessenger.of(this.context).showSnackBar(
-              SnackBar(
-                content: Text('Story upload failed: $e'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
         },
       ),
     );
@@ -733,14 +700,12 @@ class _CreateHub extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onPhoto;
   final VoidCallback onReel;
-  final VoidCallback onStory;
 
   const _CreateHub({
     required this.open,
     required this.onToggle,
     required this.onPhoto,
     required this.onReel,
-    required this.onStory,
   });
 
   Widget _option({
@@ -835,7 +800,6 @@ class _CreateHub extends StatelessWidget {
                     const SizedBox(height: 8),
                     _option(emoji: "🎬", label: "REEL VIEW", onTap: onReel),
                     const SizedBox(height: 8),
-                    _option(emoji: "⭕", label: "STORY VIEW", onTap: onStory),
                     const SizedBox(height: 13),
                   ],
                 )
@@ -893,980 +857,6 @@ class _CreateHub extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _GalaxyView {
-  final String storyId;
-  final String userId;
-  final String name;
-  final String username;
-  final String photoUrl;
-  final String mediaUrl;
-  final String mediaType;
-  final String emoji;
-  final bool live;
-
-  const _GalaxyView({
-    required this.storyId,
-    required this.userId,
-    required this.name,
-    required this.username,
-    required this.photoUrl,
-    required this.mediaUrl,
-    required this.mediaType,
-    this.live = false,
-    this.emoji = '✨',
-  });
-
-  factory _GalaxyView.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
-    final data = doc.data() ?? {};
-
-    return _GalaxyView(
-      storyId: doc.id,
-      userId: data['userId'] as String? ?? '',
-      name: data['name'] as String? ?? 'User',
-      username: data['username'] as String? ?? '',
-      photoUrl: data['photoUrl'] as String? ?? '',
-      mediaUrl: data['mediaUrl'] as String? ?? '',
-      mediaType: data['mediaType'] as String? ?? 'image',
-      live: data['live'] as bool? ?? false,
-      emoji: data['emoji'] as String? ?? '✨',
-    );
-  }
-}
-
-class _GalaxyUser {
-  final String userId;
-  final String name;
-  final String username;
-  final String photoUrl;
-  final bool live;
-  final List<_GalaxyView> stories;
-
-  const _GalaxyUser({
-    required this.userId,
-    required this.name,
-    required this.username,
-    required this.photoUrl,
-    required this.live,
-    required this.stories,
-  });
-
-  _GalaxyView get preview => stories.first;
-}
-
-class _ViewGalaxy extends StatefulWidget {
-  const _ViewGalaxy({super.key});
-
-  @override
-  State<_ViewGalaxy> createState() => _ViewGalaxyState();
-}
-
-class _ViewGalaxyState extends State<_ViewGalaxy>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  int _selected = 0;
-
-  List<_GalaxyUser> _views = [];
-
-  Stream<QuerySnapshot<Map<String, dynamic>>> get _storyStream =>
-      FirebaseFirestore.instance
-          .collection('stories')
-          .where('expiresAt', isGreaterThan: Timestamp.now())
-          .orderBy('expiresAt')
-          .snapshots();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 450),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _next() {
-    if (_views.isEmpty) return;
-
-    _controller.forward(from: 0);
-
-    setState(() {
-      _selected = (_selected + 1) % _views.length;
-    });
-  }
-
-  void _previous() {
-    if (_views.isEmpty) return;
-
-    _controller.reverse(from: 1);
-
-    setState(() {
-      _selected = (_selected - 1 + _views.length) % _views.length;
-    });
-  }
-
-  void _openView(_GalaxyUser user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _ViewCanvas(user: user),
-    );
-  }
-
-  void _createView() {
-    ScaffoldMessenger.of(this.context).showSnackBar(
-      const SnackBar(
-        content: Text('Your View creator will open here ✨'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _storyStream,
-      builder: (context, snapshot) {
-        final allStories =
-            snapshot.data?.docs
-                .map(_GalaxyView.fromFirestore)
-                .where((view) => view.mediaUrl.isNotEmpty)
-                .toList() ??
-            <_GalaxyView>[];
-
-        // View Galaxy: one circle per user, with all active stories.
-        final grouped = <String, List<_GalaxyView>>{};
-
-        for (final story in allStories) {
-          final key = story.userId.isNotEmpty ? story.userId : story.storyId;
-          grouped.putIfAbsent(key, () => <_GalaxyView>[]).add(story);
-        }
-
-        final views = grouped.entries.map((entry) {
-          final stories = entry.value;
-          return _GalaxyUser(
-            userId: stories.first.userId,
-            name: stories.first.name,
-            username: stories.first.username,
-            photoUrl: stories.first.photoUrl,
-            live: stories.any((story) => story.live),
-            stories: stories,
-          );
-        }).toList();
-
-        _views = views;
-
-        if (_views.isEmpty) {
-          _selected = 0;
-        } else if (_selected >= _views.length) {
-          _selected = 0;
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'VIEW GALAXY',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.1,
-                color: Color(0xFF25252D),
-              ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-
-                if (velocity < 0) {
-                  _next();
-                } else if (velocity > 0) {
-                  _previous();
-                }
-              },
-              child: SizedBox(
-                width: double.infinity,
-                height: 255,
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 182,
-                          height: 182,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFF5EEFF), Color(0xFFE7F7FF)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFF7C3AED,
-                                ).withValues(alpha: 0.12),
-                                blurRadius: 35,
-                                spreadRadius: 4,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        CustomPaint(
-                          size: const Size(235, 235),
-                          painter: _GalaxyPainter(progress: _controller.value),
-                        ),
-
-                        ...List.generate(_views.length, (index) {
-                          final baseAngle =
-                              (index / _views.length) * math.pi * 2;
-
-                          final angle =
-                              baseAngle +
-                              (_selected * (math.pi * 2 / _views.length)) +
-                              (_controller.value *
-                                  (math.pi * 2 / _views.length));
-
-                          const radius = 94.0;
-
-                          final offset = Offset(
-                            math.cos(angle) * radius,
-                            math.sin(angle) * radius,
-                          );
-
-                          return Transform.translate(
-                            offset: offset,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selected = index;
-                                });
-                                _openView(_views[index]);
-                              },
-                              child: _GalaxyAvatar(
-                                view: _views[index],
-                                selected: _selected == index,
-                              ),
-                            ),
-                          );
-                        }),
-
-                        GestureDetector(
-                          onTap: _createView,
-                          child: Container(
-                            width: 88,
-                            height: 88,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF7C3AED,
-                                  ).withValues(alpha: 0.25),
-                                  blurRadius: 20,
-                                  spreadRadius: 3,
-                                ),
-                              ],
-                            ),
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_rounded,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  'YOUR VIEW',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.6,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-            const Center(
-              child: Text(
-                '✦ Swipe Galaxy • Tap a View to explore ✦',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: Color(0xFF9999A4),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _GalaxyAvatar extends StatelessWidget {
-  final _GalaxyUser view;
-  final bool selected;
-
-  const _GalaxyAvatar({required this.view, required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          width: selected ? 70 : 60,
-          height: selected ? 70 : 60,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: view.live
-                  ? const [Color(0xFFFF3B5C), Color(0xFFFF9F43)]
-                  : const [Color(0xFF7C3AED), Color(0xFF38BDF8)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(
-                  0xFF7C3AED,
-                ).withValues(alpha: selected ? 0.28 : 0.12),
-                blurRadius: selected ? 16 : 8,
-              ),
-            ],
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            child: Center(
-              child: Text(
-                view.preview.emoji,
-                style: TextStyle(fontSize: selected ? 27 : 23),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          view.name,
-          style: const TextStyle(
-            fontSize: 9.5,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF303039),
-          ),
-        ),
-        if (view.live)
-          const Text(
-            '● LIVE',
-            style: TextStyle(
-              color: Color(0xFFFF3B5C),
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _GalaxyPainter extends CustomPainter {
-  final double progress;
-
-  const _GalaxyPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-
-    final ringPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..color = const Color(0xFF7C3AED).withValues(alpha: 0.16);
-
-    canvas.drawCircle(center, 94, ringPaint);
-
-    final angle = progress * math.pi * 2;
-
-    final dot = Offset(
-      center.dx + math.cos(angle) * 94,
-      center.dy + math.sin(angle) * 94,
-    );
-
-    final dotPaint = Paint()..color = const Color(0xFF38BDF8);
-
-    canvas.drawCircle(dot, 4, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _GalaxyPainter oldDelegate) {
-    return oldDelegate.progress != progress;
-  }
-}
-
-class _ViewCanvas extends StatefulWidget {
-  final _GalaxyUser user;
-
-  const _ViewCanvas({required this.user});
-
-  @override
-  State<_ViewCanvas> createState() => _ViewCanvasState();
-}
-
-class _ViewCanvasState extends State<_ViewCanvas> {
-  late final PageController _pageController;
-  Timer? _storyTimer;
-  int _storyIndex = 0;
-  double _storyProgress = 0.0;
-  bool _isPaused = false;
-
-  final TextEditingController _replyController = TextEditingController();
-  bool _hasReplyText = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        StoryService.markViewed(widget.user.stories[_storyIndex].storyId);
-        _startStoryTimer();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _storyTimer?.cancel();
-    _pageController.dispose();
-    _replyController.dispose();
-    super.dispose();
-  }
-
-  void _onStoryChanged(int index) {
-    _storyTimer?.cancel();
-
-    setState(() {
-      _storyIndex = index;
-      _storyProgress = 0.0;
-    });
-
-    StoryService.markViewed(widget.user.stories[index].storyId);
-
-    _startStoryTimer();
-  }
-
-  void _startStoryTimer() {
-    _storyTimer?.cancel();
-
-    final story = widget.user.stories[_storyIndex];
-
-    // Video apne playback ke hisaab se chalega.
-    if (story.mediaType == 'video') return;
-
-    const tick = Duration(milliseconds: 100);
-    const totalTicks = 50;
-
-    var currentTick = 0;
-
-    _storyTimer = Timer.periodic(tick, (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      if (_isPaused) return;
-
-      currentTick++;
-
-      setState(() {
-        _storyProgress = (currentTick / totalTicks).clamp(0.0, 1.0);
-      });
-
-      if (currentTick >= totalTicks) {
-        timer.cancel();
-
-        final nextIndex = _storyIndex + 1;
-
-        if (nextIndex >= widget.user.stories.length) {
-          Navigator.pop(context);
-          return;
-        }
-
-        _pageController.animateToPage(
-          nextIndex,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final stories = widget.user.stories;
-    final currentStory = stories[_storyIndex];
-
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-
-            Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 12, 10),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white12,
-                    backgroundImage: widget.user.photoUrl.isNotEmpty
-                        ? NetworkImage(widget.user.photoUrl)
-                        : null,
-                    child: widget.user.photoUrl.isEmpty
-                        ? Text(
-                            currentStory.emoji,
-                            style: const TextStyle(fontSize: 20),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.user.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(
-              height: 4,
-              child: Row(
-                children: List.generate(stories.length, (index) {
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: BoxDecoration(
-                        color: index < _storyIndex
-                            ? Colors.white
-                            : index == _storyIndex
-                            ? Colors.white.withValues(
-                                alpha: _storyProgress.clamp(0.0, 1.0),
-                              )
-                            : Colors.white24,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onLongPressStart: (_) {
-                  setState(() => _isPaused = true);
-                },
-                onLongPressEnd: (_) {
-                  setState(() => _isPaused = false);
-                },
-                onTapUp: (details) {
-                  final width = MediaQuery.of(context).size.width;
-
-                  if (details.localPosition.dx < width / 2) {
-                    if (_storyIndex > 0) {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                      );
-                    }
-                  } else {
-                    if (_storyIndex < stories.length - 1) {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                      );
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  }
-                },
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: stories.length,
-                  onPageChanged: _onStoryChanged,
-                  itemBuilder: (context, index) {
-                    return _StoryMedia(
-                      story: stories[index],
-                      onVideoFinished: () {
-                        if (_storyIndex < stories.length - 1) {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeOut,
-                          );
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _reactionEmoji('✨'),
-                      _reactionEmoji('❤️'),
-                      _reactionEmoji('🔥'),
-                      _reactionEmoji('😍'),
-                      _reactionEmoji('⚡'),
-                    ],
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _replyController,
-                          onChanged: (value) {
-                            setState(() {
-                              _hasReplyText = value.isNotEmpty;
-                            });
-                          },
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '💬 Share your view...',
-                            hintStyle: const TextStyle(color: Colors.white70),
-                            filled: true,
-                            fillColor: Colors.white12,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-
-                        GestureDetector(
-                          onTap: () async {
-                            final reply = _replyController.text.trim();
-
-                            if (reply.isEmpty) return;
-
-                            await StoryService.sendReply(
-                              storyId: stories[_storyIndex].storyId,
-                              message: reply,
-                            );
-
-                            if (!mounted) return;
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Reply sent'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-
-                            _replyController.clear();
-
-                            setState(() {
-                              _hasReplyText = false;
-                            });
-                          },
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white12,
-                          ),
-                          child: const Center(
-                            child: Text('✦➤', style: TextStyle(fontSize: 20)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String? _selectedReaction;
-
-  Widget _reactionEmoji(String emoji) {
-    final selected = _selectedReaction == emoji;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedReaction = emoji;
-        });
-      },
-      child: AnimatedScale(
-        scale: selected ? 1.25 : 1.0,
-        duration: const Duration(milliseconds: 180),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: selected
-                ? Colors.white.withValues(alpha: 0.18)
-                : Colors.transparent,
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                    ),
-                  ]
-                : [],
-          ),
-          child: Text(emoji, style: TextStyle(fontSize: selected ? 26 : 22)),
-        ),
-      ),
-    );
-  }
-}
-
-class _StoryMedia extends StatefulWidget {
-  final _GalaxyView story;
-  final VoidCallback onVideoFinished;
-
-  const _StoryMedia({required this.story, required this.onVideoFinished});
-
-  @override
-  State<_StoryMedia> createState() => _StoryMediaState();
-}
-
-class _StoryMediaState extends State<_StoryMedia> {
-  VideoPlayerController? _controller;
-  bool _videoError = false;
-  bool _videoFinishedCalled = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (widget.story.mediaType == 'video') {
-      _initVideo();
-    }
-  }
-
-  Future<void> _initVideo() async {
-    try {
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.story.mediaUrl),
-      );
-
-      _controller = controller;
-
-      await controller.initialize();
-
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
-
-      controller.addListener(() {
-        if (!_videoFinishedCalled &&
-            controller.value.isInitialized &&
-            controller.value.position >= controller.value.duration) {
-          _videoFinishedCalled = true;
-          widget.onVideoFinished();
-        }
-      });
-
-      await controller.setLooping(false);
-      await controller.play();
-
-      setState(() {});
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        _videoError = true;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.story.mediaUrl.isEmpty) {
-      return _errorView(Icons.broken_image_outlined);
-    }
-
-    if (widget.story.mediaType == 'video') {
-      return _buildVideo();
-    }
-
-    return Center(
-      child: InteractiveViewer(
-        minScale: 1,
-        maxScale: 3,
-        child: Image.network(
-          widget.story.mediaUrl,
-          fit: BoxFit.contain,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) {
-              return child;
-            }
-
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          },
-          errorBuilder: (_, __, ___) {
-            return _errorView(Icons.broken_image_outlined);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVideo() {
-    if (_videoError) {
-      return _errorView(Icons.video_library_outlined);
-    }
-
-    final controller = _controller;
-
-    if (controller == null || !controller.value.isInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    return Center(
-      child: GestureDetector(
-        onTap: () {
-          if (controller.value.isPlaying) {
-            controller.pause();
-          } else {
-            controller.play();
-          }
-
-          setState(() {});
-        },
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: VideoPlayer(controller),
-            ),
-
-            AnimatedOpacity(
-              opacity: controller.value.isPlaying ? 0 : 1,
-              duration: const Duration(milliseconds: 180),
-              child: Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 38,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _errorView(IconData icon) {
-    return Center(child: Icon(icon, color: Colors.white54, size: 50));
   }
 }
 
@@ -2407,7 +1397,7 @@ class _PostCardState extends State<PostCard> {
     if (uid == null) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please login to like posts.')),
       );
 
@@ -2452,7 +1442,7 @@ class _PostCardState extends State<PostCard> {
         feelCount = wasLiked ? feelCount + 1 : feelCount - 1;
       });
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not update like. Try again.')),
       );
     } finally {
@@ -2636,7 +1626,7 @@ class _PostCardState extends State<PostCard> {
         }
       });
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not add comment. Try again.')),
       );
     }
