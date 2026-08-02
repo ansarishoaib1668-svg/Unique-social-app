@@ -13,6 +13,7 @@ import '../../services/cloudinary_service.dart';
 
 import '../create/create_post_screen.dart';
 import '../create/view_realm_screen.dart';
+import '../profile/profile_screen.dart';
 
 class _StreamTab extends StatelessWidget {
   final String label;
@@ -238,17 +239,35 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-                        _topIcon(
-                          Icons.notifications_none_rounded,
+                        GestureDetector(
                           onTap: () {},
-                          accent: const Color(0xFF7C3AED),
+                          child: const Text(
+                            "✦ Pulse",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF7C3AED),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        _topIcon(
-                          Icons.person_outline_rounded,
-                          onTap: () {},
-                          accent: const Color(0xFF38BDF8),
-                          profile: true,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfileScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Me",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF38BDF8),
+                            ),
+                          ),
                         ),
                       ],
                     ),
