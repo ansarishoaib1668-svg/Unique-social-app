@@ -14,6 +14,7 @@ import '../../services/cloudinary_service.dart';
 import '../create/create_post_screen.dart';
 import '../create/view_realm_screen.dart';
 import '../profile/profile_screen.dart';
+import '../pulse/pulse_screen.dart';
 
 class _StreamTab extends StatelessWidget {
   final String label;
@@ -240,7 +241,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PulseScreen(),
+                              ),
+                            );
+                          },
                           child: const Text(
                             "✦ Pulse",
                             style: TextStyle(
