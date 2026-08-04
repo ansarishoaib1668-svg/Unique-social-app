@@ -62,11 +62,6 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'lib/assets/images/viewgram_logo.png',
-                  width: 200,
-                  height: 200,
-                ),
 
                 const SizedBox(height: 25),
 

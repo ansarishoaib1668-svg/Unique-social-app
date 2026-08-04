@@ -124,10 +124,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                               ],
                             ),
-                            child: Image.asset(
-                              'lib/assets/images/viewgram_logo.png',
-                              fit: BoxFit.contain,
-                            ),
                           ),
 
                           const SizedBox(height: 22),
