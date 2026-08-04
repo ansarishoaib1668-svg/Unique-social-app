@@ -10,17 +10,17 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const ViewgramApp());
+  runApp(const ViewstaApp());
 }
 
-class ViewgramApp extends StatelessWidget {
-  const ViewgramApp({super.key});
+class ViewstaApp extends StatelessWidget {
+  const ViewstaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Viewgram',
+      title: 'Viewsta',
       theme: ThemeData.light(),
       home: const SplashScreen(),
     );

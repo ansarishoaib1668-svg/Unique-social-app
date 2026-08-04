@@ -513,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return PostCard(
                       postId: post.id,
-                      user: 'Viewgram User',
+                      user: 'Viewsta User',
                       caption: post.text,
                       imageUrl: post.imageUrl,
                       videoUrl: post.videoUrl,
@@ -1835,7 +1835,7 @@ class _PostCardState extends State<PostCard> {
 
               GestureDetector(
                 onTap: () {
-                  Share.share('Check out this post on Viewgram 🚀');
+                  Share.share('Check out this post on Viewsta 🚀');
                 },
                 child: const Text('🚀', style: TextStyle(fontSize: 25)),
               ),

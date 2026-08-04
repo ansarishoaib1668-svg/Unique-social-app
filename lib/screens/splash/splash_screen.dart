@@ -31,7 +31,7 @@ class SplashScreen extends StatelessWidget {
             const SizedBox(height: 25),
 
             const Text(
-              "Welcome to Viewgram",
+              "Welcome to Viewsta",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

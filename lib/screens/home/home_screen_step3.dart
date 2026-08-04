@@ -348,7 +348,7 @@ class HomeScreen extends StatelessWidget {
                 PostCard(
                   postId: 'welcome_post',
                   user: 'Shaad',
-                  caption: 'Welcome to Viewgram 🚀',
+                  caption: 'Welcome to Viewsta 🚀',
                 ),
                 PostCard(
                   postId: 'creator_post',
@@ -526,7 +526,7 @@ class _StoryCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              // ✨ Viewgram Create Ring
+              // ✨ Viewsta Create Ring
               Container(
                 height: 108,
                 width: 102,
@@ -1264,7 +1264,7 @@ class _PostCardState extends State<PostCard> {
 
               GestureDetector(
                 onTap: () {
-                  Share.share('Check out this post on Viewgram 🚀');
+                  Share.share('Check out this post on Viewsta 🚀');
                 },
                 child: const Text('🚀', style: TextStyle(fontSize: 25)),
               ),

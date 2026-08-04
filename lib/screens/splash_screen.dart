@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 25),
 
                 const Text(
-                  "Viewgram",
+                  "Viewsta",
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,

@@ -11,7 +11,7 @@ class HomeFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Viewgram"),
+        title: const Text("Viewsta"),
       ),
       body: StreamBuilder<List<PostModel>>(
         stream: service.getPosts(),

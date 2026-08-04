@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class CloudinaryService {
   static const String cloudName = 'mxbx6vll';
-  static const String uploadPreset = 'Viewgram upload';
+  static const String uploadPreset = 'Viewsta upload';
 
   static Future<String> uploadFile(File file) async {
     final uri = Uri.parse(

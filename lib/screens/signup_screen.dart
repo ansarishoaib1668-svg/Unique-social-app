@@ -259,7 +259,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
               const Center(
                 child: Text(
-                  'Join Viewgram',
+                  'Join Viewsta',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 30,
