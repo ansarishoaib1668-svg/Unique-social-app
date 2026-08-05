@@ -129,7 +129,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           const SizedBox(height: 22),
 
                           const Text(
-                            'VIEWGRAM',
+                            'VIEWSTA',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 34,

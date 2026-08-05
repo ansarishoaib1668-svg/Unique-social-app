@@ -444,7 +444,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Text(
-                      'VIEWGRAM',
+                      'VIEWSTA',
                       style: TextStyle(
                         color: Color(0xFF666673),
                         fontSize: 11,

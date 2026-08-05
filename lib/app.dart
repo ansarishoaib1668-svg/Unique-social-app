@@ -13,7 +13,7 @@ class ViewstaApp extends StatelessWidget {
       home: const Scaffold(
         body: Center(
           child: Text(
-            'VIEWGRAM',
+            'VIEWSTA',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
