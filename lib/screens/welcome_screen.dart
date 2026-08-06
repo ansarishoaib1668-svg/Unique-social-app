@@ -107,7 +107,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           Container(
                             width: 120,
                             height: 120,
-                            padding: const EdgeInsets.all(18),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white.withValues(alpha: 0.06),
@@ -116,13 +116,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF7C3AED,
-                                  ).withValues(alpha: 0.35),
+                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                                   blurRadius: 35,
                                   spreadRadius: 5,
                                 ),
                               ],
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/app_icon.png',
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
 
