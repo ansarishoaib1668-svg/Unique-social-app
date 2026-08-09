@@ -11,32 +11,43 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fade;
-  late Animation<double> _scale;
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
       vsync: this,
+      duration: const Duration(milliseconds: 700),
     );
 
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-
     _scale = Tween<double>(
-      begin: 0.7,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+      begin: 0.92,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
 
     _controller.forward();
 
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => WelcomeScreen()),
+    Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const WelcomeScreen(),
+        ),
       );
     });
   }
@@ -50,47 +61,21 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-
-      body: Center(
-        child: FadeTransition(
-          opacity: _fade,
-
-          child: ScaleTransition(
-            scale: _scale,
-
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/app_icon.png',
-                  width: 120,
-                  height: 120,
-                ),
-
-                const SizedBox(height: 25),
-
-                const Text(
-                  "Viewsta",
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                const Text(
-                  "Your World. Your View.",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
+      body: SizedBox.expand(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fade.value,
+              child: Transform.scale(
+                scale: _scale.value,
+                child: child,
+              ),
+            );
+          },
+          child: Image.asset(
+            'assets/images/splash_screen.png',
+            fit: BoxFit.cover,
           ),
         ),
       ),
