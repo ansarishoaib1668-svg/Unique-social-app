@@ -29,28 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Container(
-          height: 88,
-          color: Colors.white,
-          child: Row(
-            children: [
-              _navItem(index: 0, icon: Icons.home_rounded, label: 'Home'),
-              _navItem(index: 1, icon: Icons.search_rounded, label: 'Search'),
-              _navItem(
-                index: 2,
-                icon: Icons.movie_creation_outlined,
-                label: 'Reels',
-              ),
-              _dualCameraNavItem(),
-              _chatNavItem(),
-              _navItem(
-                index: 5,
-                icon: Icons.person_outline_rounded,
-                label: 'Profile',
-              ),
-            ],
-          ),
-        ),
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: _bottomNavigation(),
       ),
     );
   }
@@ -220,229 +200,144 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _navItem({
+  Widget _bottomNavigation() {
+    return Container(
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: const Color(0xFFF0F0F3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _navIcon(
+            index: 0,
+            icon: Icons.home_rounded,
+            label: 'Home',
+          ),
+          _navIcon(
+            index: 1,
+            icon: Icons.search_rounded,
+            label: 'Search',
+          ),
+          _navIcon(
+            index: 2,
+            icon: Icons.chat_bubble_outline_rounded,
+            label: 'Chat',
+            badge: true,
+          ),
+          _navIcon(
+            index: 3,
+            icon: Icons.movie_creation_outlined,
+            label: 'Reels',
+          ),
+          _navIcon(
+            index: 4,
+            icon: Icons.person_outline_rounded,
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navIcon({
     required int index,
     required IconData icon,
     required String label,
+    bool badge = false,
   }) {
     final bool selected = _selectedIndex == index;
 
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: selected ? purple : const Color(0xFF17171D),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? purple : const Color(0xFF17171D),
-              ),
-            ),
-            const Spacer(),
-            AnimatedContainer(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          child: Center(
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: selected ? 58 : 0,
-              height: selected ? 4 : 0,
+              curve: Curves.easeOut,
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.circular(10),
+                color: selected
+                    ? const Color(0xFFF2ECFF)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            const SizedBox(height: 3),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _dualCameraNavItem() {
-    final bool selected = _selectedIndex == 3;
-
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          setState(() {
-            _selectedIndex = 3;
-          });
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 32,
-              height: 26,
               child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
                 children: [
-                  Positioned(
-                    left: 0,
-                    top: 3,
-                    child: Container(
-                      width: 30,
-                      height: 25,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: selected ? purple : const Color(0xFF17171D),
-                          width: 2.5,
-                        ),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Icon(
-                        Icons.circle,
-                        size: 11,
-                        color: selected ? purple : const Color(0xFF17171D),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 25,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: selected ? purple : const Color(0xFF17171D),
-                          width: 2.5,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.circle,
-                        size: 9,
-                        color: selected ? purple : const Color(0xFF17171D),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 1,
-                    top: -3,
-                    child: Icon(Icons.auto_awesome, size: 12, color: purple),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Dual Camera',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? purple : const Color(0xFF17171D),
-              ),
-            ),
-            const Spacer(),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: selected ? 58 : 0,
-              height: selected ? 4 : 0,
-              decoration: BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 3),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chatNavItem() {
-    final bool selected = _selectedIndex == 4;
-
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          setState(() {
-            _selectedIndex = 4;
-          });
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 35,
-              height: 26,
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    bottom: 1,
+                  AnimatedScale(
+                    scale: selected ? 1.04 : 1.0,
+                    duration: const Duration(milliseconds: 180),
                     child: Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 22,
-                      color: selected ? purple : const Color(0xFF17171D),
+                      icon,
+                      size: 28,
+                      color: selected
+                          ? const Color(0xFF7C3AED)
+                          : const Color(0xFF17171D),
                     ),
                   ),
+
+                  if (badge)
+                    Positioned(
+                      top: 5,
+                      right: 5,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? const Color(0xFF7C3AED)
+                              : const Color(0xFF17171D),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+
                   Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Icon(Icons.auto_awesome, size: 13, color: purple),
-                  ),
-                  Positioned(
-                    left: 9,
-                    top: 13,
-                    child: Row(
-                      children: [
-                        _chatDot(),
-                        const SizedBox(width: 3),
-                        _chatDot(),
-                        const SizedBox(width: 3),
-                        _chatDot(),
-                      ],
+                    bottom: -5,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: selected ? 7 : 0,
+                      height: selected ? 7 : 0,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF7C3AED),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Chat',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? purple : const Color(0xFF17171D),
-              ),
-            ),
-            const Spacer(),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: selected ? 58 : 0,
-              height: selected ? 4 : 0,
-              decoration: BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 3),
-          ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _chatDot() {
-    return Container(
-      width: 3,
-      height: 3,
-      decoration: const BoxDecoration(color: purple, shape: BoxShape.circle),
     );
   }
 }
