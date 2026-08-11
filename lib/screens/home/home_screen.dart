@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(
                 Icons.add_rounded,
                 color: Colors.white,
-                size: 31,
+                size: 22,
               ),
             ),
           ),
@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               icon,
-              size: 31,
+              size: 22,
               color: selected ? purple : const Color(0xFF17171D),
             ),
             const SizedBox(height: 5),
@@ -284,8 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 42,
-              height: 32,
+              width: 32,
+              height: 26,
               child: Stack(
                 children: [
                   Positioned(
@@ -379,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             SizedBox(
               width: 35,
-              height: 32,
+              height: 26,
               child: Stack(
                 children: [
                   Positioned(
@@ -387,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     bottom: 1,
                     child: Icon(
                       Icons.chat_bubble_outline_rounded,
-                      size: 31,
+                      size: 22,
                       color: selected ? purple : const Color(0xFF17171D),
                     ),
                   ),
