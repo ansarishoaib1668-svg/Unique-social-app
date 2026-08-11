@@ -75,7 +75,7 @@ class _GlowCircle extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(.08),
+        color: Colors.white.withValues(alpha: .08),
       ),
     );
   }
