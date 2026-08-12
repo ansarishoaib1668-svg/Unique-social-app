@@ -44,12 +44,12 @@ class _HomeScreenState extends State<HomeScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              margin: const EdgeInsets.only(left: 16),
-              width: 48,
-              height: 48,
+              margin: const EdgeInsets.only(left: 20),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: purple,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
                     color: purple.withValues(alpha: 0.22),
@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(
                 Icons.add_rounded,
                 color: Colors.white,
-                size: 22,
+                size: 21,
               ),
             ),
           ),
@@ -79,8 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
             alignment: Alignment.centerRight,
             child: Container(
               margin: const EdgeInsets.only(right: 16),
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
