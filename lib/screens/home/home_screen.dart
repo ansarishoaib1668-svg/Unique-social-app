@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'Viewsta',
             style: TextStyle(
               color: purple,
-              fontSize: 27,
+              fontSize: 23,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -79,8 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
             alignment: Alignment.centerRight,
             child: Container(
               margin: const EdgeInsets.only(right: 16),
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
@@ -108,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Moments',
                   style: TextStyle(
                     color: Color(0xFF17171D),
-                    fontSize: 24,
+                    fontSize: 21,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
