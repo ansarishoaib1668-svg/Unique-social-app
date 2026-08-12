@@ -11,408 +11,193 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
   int _streamTab = 0;
   final FirestoreService _firestoreService = FirestoreService();
 
-  static const Color purple = Color(0xFF7C3AED);
+  static const purple = Color(0xFF7C3AED);
+  static const text = Color(0xFF17171D);
+  static const muted = Color(0xFF77737E);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            _topHeader(),
-
+            _header(),
             Expanded(
-              child: SingleChildScrollView(
+              child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    _momentsSection(),
-                    const SizedBox(height: 18),
-                    _viewstreamSection(),
-                    const SizedBox(height: 28),
-                  ],
-                ),
+                slivers: [
+                  SliverToBoxAdapter(child: _streamTabs()),
+                  SliverToBoxAdapter(child: _moodRow()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 12)),
+                  StreamBuilder<List<PostModel>>(
+                    stream: _firestoreService.getPosts(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return SliverToBoxAdapter(
+                          child: _message(
+                            Icons.cloud_off_rounded,
+                            'Unable to load your Viewstream right now.',
+                          ),
+                        );
+                      }
+
+                      final posts = snapshot.data ?? <PostModel>[];
+
+                      if (posts.isEmpty) {
+                        return SliverToBoxAdapter(
+                          child: _message(
+                            Icons.photo_library_outlined,
+                            'No posts yet. Your Viewstream will appear here.',
+                          ),
+                        );
+                      }
+
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+                              child: _postCard(posts[index]),
+                            );
+                          },
+                          childCount: posts.length,
+                        ),
+                      );
+                    },
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                ],
               ),
             ),
           ],
         ),
       ),
-
-      bottomNavigationBar: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: _bottomNavigation(),
-      ),
+      bottomNavigationBar: _bottomNavigation(),
     );
   }
 
-  Widget _topHeader() {
-    return SizedBox(
-      height: 78,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              margin: const EdgeInsets.only(left: 20),
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: purple.withValues(alpha: 0.22),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 21,
-              ),
-            ),
-          ),
-
-          const Text(
-            'Viewsta',
-            style: TextStyle(
-              color: purple,
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: purple, width: 2),
-              ),
-              child: CustomPaint(painter: _PulseIconPainter()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _momentsSection() {
+  Widget _header() {
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(22, 10, 18, 8),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+          RichText(
+            text: const TextSpan(
               children: [
-                const Text(
-                  'Moments',
+                TextSpan(
+                  text: 'view',
                   style: TextStyle(
-                    color: Color(0xFF17171D),
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
+                    color: text,
+                    fontSize: 31,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  'See All  ›',
+                TextSpan(
+                  text: 'sta',
                   style: TextStyle(
                     color: purple,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 31,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          SizedBox(
-            height: 125,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              scrollDirection: Axis.horizontal,
-              children: [
-                _yourMoment(),
-                // Real users' Moments will be added here later.
-                // No fake names or fake photos.
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _yourMoment() {
-    return SizedBox(
-      width: 92,
-      child: Column(
-        children: [
-          Container(
-            width: 78,
-            height: 78,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: purple.withValues(alpha: 0.65), width: 2),
-              color: const Color(0xFFF7F3FF),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: purple.withValues(alpha: 0.12),
-                    border: Border.all(
-                      color: purple.withValues(alpha: 0.35),
-                      width: 2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: purple,
-                    size: 23,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 9,
-                  child: Icon(Icons.auto_awesome, color: purple, size: 9),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 7),
-          const Text(
-            'Your Moment',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: purple,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _viewstreamSection() {
-    const tabs = ['For You', 'Following', 'Fresh'];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7F5FA),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Row(
-              children: List.generate(tabs.length, (index) {
-                final selected = _streamTab == index;
-
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() => _streamTab = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: selected ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          color: selected
-                              ? purple
-                              : const Color(0xFF77737E),
-                          fontSize: 13,
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9F6FF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFEDE5FF)),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome_rounded,
-                  color: purple,
-                  size: 22,
-                ),
-                SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'YOUR VIEW',
-                        style: TextStyle(
-                          color: Color(0xFF17171D),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'Personalized highlights will appear here.',
-                        style: TextStyle(
-                          color: Color(0xFF77737E),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: purple,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          Row(
+          const Spacer(),
+          _headerIcon(Icons.bolt_rounded),
+          const SizedBox(width: 18),
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              const Text(
-                'VIEWSTREAM',
-                style: TextStyle(
-                  color: Color(0xFF17171D),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                tabs[_streamTab],
-                style: const TextStyle(
-                  color: purple,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+              _headerIcon(Icons.notifications_none_rounded),
+              Positioned(
+                right: 1,
+                top: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 10),
-
-          if (_streamTab == 1)
-            _streamMessage(
-              Icons.people_outline_rounded,
-              'Follow creators to build your Following stream.',
-            )
-          else
-            StreamBuilder<List<PostModel>>(
-              stream: _firestoreService.getPosts(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 35),
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return _streamMessage(
-                    Icons.cloud_off_rounded,
-                    'Unable to load Viewstream right now.',
-                  );
-                }
-
-                final posts = snapshot.data ?? const <PostModel>[];
-
-                if (posts.isEmpty) {
-                  return _streamMessage(
-                    Icons.photo_library_outlined,
-                    'No posts yet. Your Viewstream will appear here.',
-                  );
-                }
-
-                return Column(
-                  children: [
-                    for (final post in posts) ...[
-                      _streamPostCard(post),
-                      const SizedBox(height: 14),
-                    ],
-                  ],
-                );
-              },
-            ),
+          const SizedBox(width: 18),
+          _headerIcon(Icons.search_rounded),
         ],
       ),
     );
   }
 
-  Widget _streamMessage(IconData icon, String message) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 28,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFC),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF0EFF3)),
-      ),
-      child: Column(
+  Widget _headerIcon(IconData icon) {
+    return Icon(icon, color: text, size: 30);
+  }
+
+  Widget _streamTabs() {
+    const tabs = ['For You', 'Following', 'Fresh'];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 4, 16, 10),
+      child: Row(
         children: [
-          Icon(icon, color: purple, size: 28),
-          const SizedBox(height: 9),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF77737E),
-              fontSize: 12,
-              height: 1.4,
+          for (int i = 0; i < tabs.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(right: 26),
+              child: GestureDetector(
+                onTap: () => setState(() => _streamTab = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _streamTab == i ? purple : Colors.transparent,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    tabs[i],
+                    style: TextStyle(
+                      color: _streamTab == i ? Colors.white : text,
+                      fontSize: 16,
+                      fontWeight: _streamTab == i
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          const Spacer(),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: purple, width: 1.5),
+            ),
+            child: const Icon(
+              Icons.tune_rounded,
+              color: purple,
+              size: 24,
             ),
           ),
         ],
@@ -420,123 +205,129 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _streamPostCard(PostModel post) {
+  Widget _moodRow() {
+    const moods = [
+      ('🔥', 'Chill'),
+      ('📈', 'Trending'),
+      ('🎨', 'Creative'),
+      ('🌎', 'Explore'),
+      ('😀', 'Fun'),
+    ];
+
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: moods.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final mood = moods[index];
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE5E5E9)),
+            ),
+            child: Row(
+              children: [
+                Text(mood.$1, style: const TextStyle(fontSize: 17)),
+                const SizedBox(width: 7),
+                Text(
+                  mood.$2,
+                  style: const TextStyle(
+                    color: text,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _postCard(PostModel post) {
     final hasImage = post.imageUrl.trim().isNotEmpty;
+    final comments = post.comments.length;
 
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: const Color(0xFFF0EFF3)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: const Color(0xFFE3E3E7)),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.045),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            color: Color(0x12000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 17,
-                  backgroundColor: Color(0xFFF2ECFF),
-                  child: Icon(
-                    Icons.person_outline_rounded,
-                    color: purple,
-                    size: 19,
-                  ),
-                ),
-                SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    'View Creator',
-                    style: TextStyle(
-                      color: Color(0xFF17171D),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.more_horiz_rounded,
-                  color: Color(0xFF17171D),
-                ),
-              ],
-            ),
-          ),
-
+          _postHeader(),
           if (hasImage)
             AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: 0.8,
               child: Image.network(
                 post.imageUrl,
+                width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _streamMediaFallback();
-                },
+                errorBuilder: (_, __, ___) => _mediaFallback(),
               ),
             )
           else if (post.text.trim().isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
               child: Text(
                 post.text,
                 style: const TextStyle(
-                  color: Color(0xFF25232B),
-                  fontSize: 14,
+                  color: text,
+                  fontSize: 16,
                   height: 1.45,
                 ),
               ),
             )
           else
-            _streamMediaFallback(),
-
+            _mediaFallback(),
+          _actions(post),
+          if (post.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 5),
+              child: Text(
+                post.text,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: text,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
-            child: Row(
-              children: [
-                _streamAction(
-                  Icons.favorite_border_rounded,
-                  'Glow',
-                  () => _firestoreService.likePost(post.id),
-                ),
-                _streamAction(
-                  Icons.chat_bubble_outline_rounded,
-                  'Voice',
-                  () {},
-                ),
-                _streamAction(
-                  Icons.send_outlined,
-                  'Pass',
-                  () {},
-                ),
-                _streamAction(
-                  Icons.bookmark_border_rounded,
-                  'Vault',
-                  () {},
-                ),
-                _streamAction(
-                  Icons.auto_awesome_rounded,
-                  'Vibe',
-                  () {},
-                ),
-                const Spacer(),
-                Text(
-                  '${post.likes}',
-                  style: const TextStyle(
-                    color: Color(0xFF77737E),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+            child: Text(
+              comments == 0 ? 'View comments' : 'View all $comments comments',
+              style: const TextStyle(
+                color: muted,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(18, 0, 18, 15),
+            child: Text(
+              'Just now',
+              style: TextStyle(color: muted, fontSize: 11),
             ),
           ),
         ],
@@ -544,11 +335,169 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _streamMediaFallback() {
+  Widget _postHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(17, 14, 14, 13),
+      child: Row(
+        children: [
+          Container(
+            width: 47,
+            height: 47,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: purple, width: 1.8),
+            ),
+            child: const CircleAvatar(
+              backgroundColor: Color(0xFFF1ECFF),
+              child: Icon(
+                Icons.person_outline_rounded,
+                color: purple,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 11),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'View Creator',
+                      style: TextStyle(
+                        color: text,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Icon(
+                      Icons.verified_rounded,
+                      color: Color(0xFF1689F5),
+                      size: 16,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 3),
+                Text(
+                  '5 days ago',
+                  style: TextStyle(color: muted, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.more_vert_rounded, color: text, size: 25),
+        ],
+      ),
+    );
+  }
+
+  Widget _actions(PostModel post) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
+      child: Row(
+        children: [
+          _action(
+            Icons.favorite_border_rounded,
+            '${post.likes}',
+            'Glow',
+            const Color(0xFFFF405D),
+            () => _firestoreService.likePost(post.id),
+          ),
+          _action(
+            Icons.chat_bubble_outline_rounded,
+            '${post.comments.length}',
+            'Voice',
+            const Color(0xFF8B5CF6),
+            () {},
+          ),
+          _action(
+            Icons.graphic_eq_rounded,
+            '0',
+            'Pass',
+            const Color(0xFF38A8FF),
+            () {},
+          ),
+          _action(
+            Icons.bookmark_border_rounded,
+            '0',
+            'Vault',
+            const Color(0xFF8AD51B),
+            () {},
+          ),
+          _action(
+            Icons.auto_awesome_rounded,
+            '',
+            'Vibe',
+            const Color(0xFF9B5CFF),
+            () {},
+          ),
+          const Spacer(),
+          const Icon(
+            Icons.bookmark_border_rounded,
+            color: text,
+            size: 28,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _action(
+    IconData icon,
+    String count,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: color, size: 27),
+                  if (count.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      count,
+                      style: const TextStyle(
+                        color: text,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _mediaFallback() {
     return Container(
-      height: 250,
       width: double.infinity,
-      color: const Color(0xFFF7F5FA),
+      height: 300,
+      color: const Color(0xFFF7F7FA),
       child: const Center(
         child: Icon(
           Icons.image_outlined,
@@ -559,345 +508,96 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _streamAction(
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 5,
-          vertical: 3,
+  Widget _message(IconData icon, String message) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE7E7EB)),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: purple, size: 30),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: muted, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomNavigation() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 82,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Color(0xFFE8E8EC)),
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            Icon(
-              icon,
-              color: const Color(0xFF17171D),
-              size: 19,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF77737E),
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
+            _navItem(Icons.home_filled, 'Home', true),
+            _navItem(Icons.explore_outlined, 'Explore', false),
+            Expanded(
+              child: Center(
+                child: Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: purple,
+                    boxShadow: [
+                      BoxShadow(
+                        color: purple.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 38,
+                  ),
+                ),
               ),
             ),
+            _navItem(Icons.chat_bubble_outline_rounded, 'Chat', false),
+            _navItem(Icons.person_outline_rounded, 'Profile', false),
           ],
         ),
       ),
     );
   }
 
-  Widget _bottomNavigation() {
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: const Color(0xFFF0F0F3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _viewstaNavItem(0, 'Home'),
-          _viewstaNavItem(1, 'Reels'),
-          _viewstaNavItem(2, 'Chat'),
-          _viewstaNavItem(3, 'View Pulse'),
-          _viewstaNavItem(4, 'Search'),
-          _viewstaNavItem(5, 'Profile'),
-        ],
-      ),
-    );
-  }
-
-  Widget _viewstaNavItem(int index, String label) {
-    final selected = _selectedIndex == index;
-
+  Widget _navItem(IconData icon, String label, bool selected) {
     return Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: selected
-                    ? const Color(0xFFF2ECFF)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CustomPaint(
-                    painter: _ViewstaNavPainter(
-                      type: index,
-                      selected: selected,
-                    ),
-                  ),
-                ),
-              ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: selected ? purple : text,
+            size: 26,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected ? purple : text,
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
-        ),
+        ],
       ),
     );
-  }
-
-}
-
-
-class _ViewstaNavPainter extends CustomPainter {
-  final int type;
-  final bool selected;
-
-  const _ViewstaNavPainter({
-    required this.type,
-    required this.selected,
-  });
-
-  static const Color purple = Color(0xFF7C3AED);
-  static const Color black = Color(0xFF17171D);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = selected ? purple : black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final fill = Paint()
-      ..color = purple
-      ..style = PaintingStyle.fill;
-
-    switch (type) {
-      case 0:
-        _home(canvas, line);
-        break;
-      case 1:
-        _reels(canvas, line, fill);
-        break;
-      case 2:
-        _chat(canvas, line, fill);
-        break;
-      case 3:
-        _pulse(canvas, line, fill);
-        break;
-      case 4:
-        _search(canvas, line);
-        break;
-      case 5:
-        _profile(canvas, line, fill);
-        break;
-    }
-  }
-
-  void _home(Canvas canvas, Paint line) {
-    final path = Path()
-      ..moveTo(3, 10)
-      ..lineTo(11, 3)
-      ..lineTo(19, 10)
-      ..lineTo(19, 19)
-      ..lineTo(13, 19)
-      ..lineTo(13, 13)
-      ..lineTo(9, 13)
-      ..lineTo(9, 19)
-      ..lineTo(3, 19)
-      ..close();
-
-    canvas.drawPath(path, line);
-  }
-
-  void _reels(Canvas canvas, Paint line, Paint fill) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(2, 3, 18, 16),
-        const Radius.circular(5),
-      ),
-      line,
-    );
-
-    final play = Path()
-      ..moveTo(9, 7)
-      ..lineTo(9, 15)
-      ..lineTo(15, 11)
-      ..close();
-
-    canvas.drawPath(play, fill);
-  }
-
-  void _chat(Canvas canvas, Paint line, Paint fill) {
-    final bubble = Path()
-      ..moveTo(5, 3)
-      ..lineTo(17, 3)
-      ..quadraticBezierTo(20, 3, 20, 6)
-      ..lineTo(20, 12)
-      ..quadraticBezierTo(20, 15, 17, 15)
-      ..lineTo(9, 15)
-      ..lineTo(5, 19)
-      ..lineTo(6, 15)
-      ..quadraticBezierTo(2, 15, 2, 12)
-      ..lineTo(2, 6)
-      ..quadraticBezierTo(2, 3, 5, 3)
-      ..close();
-
-    canvas.drawPath(bubble, line);
-
-    canvas.drawCircle(const Offset(8, 9), 1.1, fill);
-    canvas.drawCircle(const Offset(11, 9), 1.1, fill);
-    canvas.drawCircle(const Offset(14, 9), 1.1, fill);
-  }
-
-  void _pulse(Canvas canvas, Paint line, Paint fill) {
-    const center = Offset(11, 11);
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: center,
-        width: 19,
-        height: 8,
-      ),
-      line,
-    );
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: center,
-        width: 8,
-        height: 19,
-      ),
-      line,
-    );
-
-    final star = Path()
-      ..moveTo(11, 4)
-      ..lineTo(12.7, 9.3)
-      ..lineTo(18, 11)
-      ..lineTo(12.7, 12.7)
-      ..lineTo(11, 18)
-      ..lineTo(9.3, 12.7)
-      ..lineTo(4, 11)
-      ..lineTo(9.3, 9.3)
-      ..close();
-
-    canvas.drawPath(star, fill);
-  }
-
-  void _search(Canvas canvas, Paint line) {
-    canvas.drawCircle(const Offset(9, 9), 6, line);
-
-    canvas.drawLine(
-      const Offset(13.5, 13.5),
-      const Offset(19, 19),
-      line,
-    );
-  }
-
-  void _profile(Canvas canvas, Paint line, Paint fill) {
-    canvas.drawCircle(const Offset(11, 11), 9, line);
-
-    canvas.drawCircle(
-      const Offset(11, 8),
-      2.4,
-      fill,
-    );
-
-    final body = Path()
-      ..moveTo(6.5, 17)
-      ..quadraticBezierTo(7, 12, 11, 12)
-      ..quadraticBezierTo(15, 12, 15.5, 17);
-
-    canvas.drawPath(body, fill);
-
-    final sparkle = Path()
-      ..moveTo(17, 2)
-      ..lineTo(18, 4)
-      ..lineTo(20, 5)
-      ..lineTo(18, 6)
-      ..lineTo(17, 8)
-      ..lineTo(16, 6)
-      ..lineTo(14, 5)
-      ..lineTo(16, 4)
-      ..close();
-
-    canvas.drawPath(sparkle, fill);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ViewstaNavPainter oldDelegate) {
-    return oldDelegate.type != type ||
-        oldDelegate.selected != selected;
-  }
-}
-
-
-class _PulseIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-
-    final paint = Paint()
-      ..color = const Color(0xFF7C3AED)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-
-    path.moveTo(size.width * 0.18, center.dy);
-    path.lineTo(size.width * 0.30, center.dy);
-    path.lineTo(size.width * 0.38, size.height * 0.34);
-    path.lineTo(size.width * 0.46, size.height * 0.66);
-    path.lineTo(size.width * 0.54, size.height * 0.42);
-    path.lineTo(size.width * 0.62, size.height * 0.58);
-    path.lineTo(size.width * 0.70, center.dy);
-    path.lineTo(size.width * 0.82, center.dy);
-
-    canvas.drawPath(path, paint);
-
-    final dotPaint = Paint()
-      ..color = const Color(0xFF38BDF8)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(
-      Offset(size.width * 0.50, size.height * 0.50),
-      2.8,
-      dotPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }
