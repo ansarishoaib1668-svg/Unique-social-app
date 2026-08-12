@@ -45,8 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
             alignment: Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.only(left: 20),
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: purple,
                 borderRadius: BorderRadius.circular(14),
