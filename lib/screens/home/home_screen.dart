@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../models/post_model.dart';
+import '../../services/firestore_service.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -9,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int _streamTab = 0;
+  final FirestoreService _firestoreService = FirestoreService();
 
   static const Color purple = Color(0xFF7C3AED);
 
@@ -22,7 +27,19 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _topHeader(),
 
-            Expanded(child: SingleChildScrollView(child: _momentsSection())),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _momentsSection(),
+                    const SizedBox(height: 18),
+                    _viewstreamSection(),
+                    const SizedBox(height: 28),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -196,6 +213,384 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+
+  Widget _viewstreamSection() {
+    const tabs = ['For You', 'Following', 'Fresh'];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F5FA),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              children: List.generate(tabs.length, (index) {
+                final selected = _streamTab == index;
+
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(() => _streamTab = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: selected ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        tabs[index],
+                        style: TextStyle(
+                          color: selected
+                              ? purple
+                              : const Color(0xFF77737E),
+                          fontSize: 13,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9F6FF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFEDE5FF)),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: purple,
+                  size: 22,
+                ),
+                SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'YOUR VIEW',
+                        style: TextStyle(
+                          color: Color(0xFF17171D),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'Personalized highlights will appear here.',
+                        style: TextStyle(
+                          color: Color(0xFF77737E),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: purple,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          Row(
+            children: [
+              const Text(
+                'VIEWSTREAM',
+                style: TextStyle(
+                  color: Color(0xFF17171D),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                tabs[_streamTab],
+                style: const TextStyle(
+                  color: purple,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          if (_streamTab == 1)
+            _streamMessage(
+              Icons.people_outline_rounded,
+              'Follow creators to build your Following stream.',
+            )
+          else
+            StreamBuilder<List<PostModel>>(
+              stream: _firestoreService.getPosts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 35),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return _streamMessage(
+                    Icons.cloud_off_rounded,
+                    'Unable to load Viewstream right now.',
+                  );
+                }
+
+                final posts = snapshot.data ?? const <PostModel>[];
+
+                if (posts.isEmpty) {
+                  return _streamMessage(
+                    Icons.photo_library_outlined,
+                    'No posts yet. Your Viewstream will appear here.',
+                  );
+                }
+
+                return Column(
+                  children: [
+                    for (final post in posts) ...[
+                      _streamPostCard(post),
+                      const SizedBox(height: 14),
+                    ],
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _streamMessage(IconData icon, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 28,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAFAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0EFF3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: purple, size: 28),
+          const SizedBox(height: 9),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF77737E),
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _streamPostCard(PostModel post) {
+    final hasImage = post.imageUrl.trim().isNotEmpty;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: const Color(0xFFF0EFF3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.045),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 17,
+                  backgroundColor: Color(0xFFF2ECFF),
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: purple,
+                    size: 19,
+                  ),
+                ),
+                SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    'View Creator',
+                    style: TextStyle(
+                      color: Color(0xFF17171D),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.more_horiz_rounded,
+                  color: Color(0xFF17171D),
+                ),
+              ],
+            ),
+          ),
+
+          if (hasImage)
+            AspectRatio(
+              aspectRatio: 1,
+              child: Image.network(
+                post.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _streamMediaFallback();
+                },
+              ),
+            )
+          else if (post.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+              child: Text(
+                post.text,
+                style: const TextStyle(
+                  color: Color(0xFF25232B),
+                  fontSize: 14,
+                  height: 1.45,
+                ),
+              ),
+            )
+          else
+            _streamMediaFallback(),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
+            child: Row(
+              children: [
+                _streamAction(
+                  Icons.favorite_border_rounded,
+                  'Glow',
+                  () => _firestoreService.likePost(post.id),
+                ),
+                _streamAction(
+                  Icons.chat_bubble_outline_rounded,
+                  'Voice',
+                  () {},
+                ),
+                _streamAction(
+                  Icons.send_outlined,
+                  'Pass',
+                  () {},
+                ),
+                _streamAction(
+                  Icons.bookmark_border_rounded,
+                  'Vault',
+                  () {},
+                ),
+                _streamAction(
+                  Icons.auto_awesome_rounded,
+                  'Vibe',
+                  () {},
+                ),
+                const Spacer(),
+                Text(
+                  '${post.likes}',
+                  style: const TextStyle(
+                    color: Color(0xFF77737E),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _streamMediaFallback() {
+    return Container(
+      height: 250,
+      width: double.infinity,
+      color: const Color(0xFFF7F5FA),
+      child: const Center(
+        child: Icon(
+          Icons.image_outlined,
+          color: purple,
+          size: 42,
+        ),
+      ),
+    );
+  }
+
+  Widget _streamAction(
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 5,
+          vertical: 3,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF17171D),
+              size: 19,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF77737E),
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
