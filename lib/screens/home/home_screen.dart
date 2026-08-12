@@ -221,44 +221,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          _navIcon(
-            index: 0,
-            icon: Icons.home_rounded,
-            label: 'Home',
-          ),
-          _navIcon(
-            index: 1,
-            icon: Icons.search_rounded,
-            label: 'Search',
-          ),
-          _navIcon(
-            index: 2,
-            icon: Icons.chat_bubble_outline_rounded,
-            label: 'Chat',
-            badge: true,
-          ),
-          _navIcon(
-            index: 3,
-            icon: Icons.movie_creation_outlined,
-            label: 'Reels',
-          ),
-          _navIcon(
-            index: 4,
-            icon: Icons.person_outline_rounded,
-            label: 'Profile',
-          ),
+          _viewstaNavItem(0, 'Home'),
+          _viewstaNavItem(1, 'Reels'),
+          _viewstaNavItem(2, 'Chat'),
+          _viewstaNavItem(3, 'View Pulse'),
+          _viewstaNavItem(4, 'Search'),
+          _viewstaNavItem(5, 'Profile'),
         ],
       ),
     );
   }
 
-  Widget _navIcon({
-    required int index,
-    required IconData icon,
-    required String label,
-    bool badge = false,
-  }) {
-    final bool selected = _selectedIndex == index;
+  Widget _viewstaNavItem(int index, String label) {
+    final selected = _selectedIndex == index;
 
     return Expanded(
       child: Semantics(
@@ -275,7 +250,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Center(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
               width: 54,
               height: 54,
               decoration: BoxDecoration(
@@ -284,55 +258,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  AnimatedScale(
-                    scale: selected ? 1.04 : 1.0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      icon,
-                      size: 28,
-                      color: selected
-                          ? const Color(0xFF7C3AED)
-                          : const Color(0xFF17171D),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CustomPaint(
+                    painter: _ViewstaNavPainter(
+                      type: index,
+                      selected: selected,
                     ),
                   ),
-
-                  if (badge)
-                    Positioned(
-                      top: 5,
-                      right: 5,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? const Color(0xFF7C3AED)
-                              : const Color(0xFF17171D),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  Positioned(
-                    bottom: -5,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: selected ? 7 : 0,
-                      height: selected ? 7 : 0,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF7C3AED),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -340,7 +276,195 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 }
+
+
+class _ViewstaNavPainter extends CustomPainter {
+  final int type;
+  final bool selected;
+
+  const _ViewstaNavPainter({
+    required this.type,
+    required this.selected,
+  });
+
+  static const Color purple = Color(0xFF7C3AED);
+  static const Color black = Color(0xFF17171D);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final line = Paint()
+      ..color = selected ? purple : black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fill = Paint()
+      ..color = purple
+      ..style = PaintingStyle.fill;
+
+    switch (type) {
+      case 0:
+        _home(canvas, line);
+        break;
+      case 1:
+        _reels(canvas, line, fill);
+        break;
+      case 2:
+        _chat(canvas, line, fill);
+        break;
+      case 3:
+        _pulse(canvas, line, fill);
+        break;
+      case 4:
+        _search(canvas, line);
+        break;
+      case 5:
+        _profile(canvas, line, fill);
+        break;
+    }
+  }
+
+  void _home(Canvas canvas, Paint line) {
+    final path = Path()
+      ..moveTo(3, 10)
+      ..lineTo(11, 3)
+      ..lineTo(19, 10)
+      ..lineTo(19, 19)
+      ..lineTo(13, 19)
+      ..lineTo(13, 13)
+      ..lineTo(9, 13)
+      ..lineTo(9, 19)
+      ..lineTo(3, 19)
+      ..close();
+
+    canvas.drawPath(path, line);
+  }
+
+  void _reels(Canvas canvas, Paint line, Paint fill) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(2, 3, 18, 16),
+        const Radius.circular(5),
+      ),
+      line,
+    );
+
+    final play = Path()
+      ..moveTo(9, 7)
+      ..lineTo(9, 15)
+      ..lineTo(15, 11)
+      ..close();
+
+    canvas.drawPath(play, fill);
+  }
+
+  void _chat(Canvas canvas, Paint line, Paint fill) {
+    final bubble = Path()
+      ..moveTo(5, 3)
+      ..lineTo(17, 3)
+      ..quadraticBezierTo(20, 3, 20, 6)
+      ..lineTo(20, 12)
+      ..quadraticBezierTo(20, 15, 17, 15)
+      ..lineTo(9, 15)
+      ..lineTo(5, 19)
+      ..lineTo(6, 15)
+      ..quadraticBezierTo(2, 15, 2, 12)
+      ..lineTo(2, 6)
+      ..quadraticBezierTo(2, 3, 5, 3)
+      ..close();
+
+    canvas.drawPath(bubble, line);
+
+    canvas.drawCircle(const Offset(8, 9), 1.1, fill);
+    canvas.drawCircle(const Offset(11, 9), 1.1, fill);
+    canvas.drawCircle(const Offset(14, 9), 1.1, fill);
+  }
+
+  void _pulse(Canvas canvas, Paint line, Paint fill) {
+    const center = Offset(11, 11);
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center,
+        width: 19,
+        height: 8,
+      ),
+      line,
+    );
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center,
+        width: 8,
+        height: 19,
+      ),
+      line,
+    );
+
+    final star = Path()
+      ..moveTo(11, 4)
+      ..lineTo(12.7, 9.3)
+      ..lineTo(18, 11)
+      ..lineTo(12.7, 12.7)
+      ..lineTo(11, 18)
+      ..lineTo(9.3, 12.7)
+      ..lineTo(4, 11)
+      ..lineTo(9.3, 9.3)
+      ..close();
+
+    canvas.drawPath(star, fill);
+  }
+
+  void _search(Canvas canvas, Paint line) {
+    canvas.drawCircle(const Offset(9, 9), 6, line);
+
+    canvas.drawLine(
+      const Offset(13.5, 13.5),
+      const Offset(19, 19),
+      line,
+    );
+  }
+
+  void _profile(Canvas canvas, Paint line, Paint fill) {
+    canvas.drawCircle(const Offset(11, 11), 9, line);
+
+    canvas.drawCircle(
+      const Offset(11, 8),
+      2.4,
+      fill,
+    );
+
+    final body = Path()
+      ..moveTo(6.5, 17)
+      ..quadraticBezierTo(7, 12, 11, 12)
+      ..quadraticBezierTo(15, 12, 15.5, 17);
+
+    canvas.drawPath(body, fill);
+
+    final sparkle = Path()
+      ..moveTo(17, 2)
+      ..lineTo(18, 4)
+      ..lineTo(20, 5)
+      ..lineTo(18, 6)
+      ..lineTo(17, 8)
+      ..lineTo(16, 6)
+      ..lineTo(14, 5)
+      ..lineTo(16, 4)
+      ..close();
+
+    canvas.drawPath(sparkle, fill);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ViewstaNavPainter oldDelegate) {
+    return oldDelegate.type != type ||
+        oldDelegate.selected != selected;
+  }
+}
+
 
 class _PulseIconPainter extends CustomPainter {
   @override
