@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/post_model.dart';
@@ -15,13 +16,23 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
   static const purple = Color(0xFF7C3AED);
-  static const text = Color(0xFF17171D);
-  static const muted = Color(0xFF77737E);
+  static const background = Color(0xFF000000);
+  static const card = Color(0xFF060608);
+  static const border = Color(0xFF25252A);
+  static const text = Color(0xFFFFFFFF);
+  static const muted = Color(0xFFA2A2AB);
+
+  User? get _user => FirebaseAuth.instance.currentUser;
+
+  String get _displayName {
+    final name = _user?.displayName?.trim();
+    return (name == null || name.isEmpty) ? 'You' : name;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -32,17 +43,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(child: _streamTabs()),
-                  SliverToBoxAdapter(child: _moodRow()),
-                  SliverToBoxAdapter(child: const SizedBox(height: 12)),
+                  SliverToBoxAdapter(child: _moments()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 10)),
                   StreamBuilder<List<PostModel>>(
                     stream: _firestoreService.getPosts(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const SliverToBoxAdapter(
                           child: Padding(
-                            padding: EdgeInsets.all(40),
+                            padding: EdgeInsets.all(36),
                             child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: purple,
+                                strokeWidth: 2,
+                              ),
                             ),
                           ),
                         );
@@ -52,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SliverToBoxAdapter(
                           child: _message(
                             Icons.cloud_off_rounded,
-                            'Unable to load your Viewstream right now.',
+                            'Unable to load posts right now.',
                           ),
                         );
                       }
@@ -63,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SliverToBoxAdapter(
                           child: _message(
                             Icons.photo_library_outlined,
-                            'No posts yet. Your Viewstream will appear here.',
+                            'No posts yet.',
                           ),
                         );
                       }
@@ -72,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             return Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+                              padding:
+                                  const EdgeInsets.fromLTRB(14, 0, 14, 12),
                               child: _postCard(posts[index]),
                             );
                           },
@@ -81,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 92)),
                 ],
               ),
             ),
@@ -94,110 +109,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 10, 18, 8),
+      padding: const EdgeInsets.fromLTRB(30, 10, 28, 7),
       child: Row(
         children: [
-          RichText(
-            text: const TextSpan(
-              children: [
-                TextSpan(
-                  text: 'view',
-                  style: TextStyle(
-                    color: text,
-                    fontSize: 31,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                TextSpan(
-                  text: 'sta',
-                  style: TextStyle(
-                    color: purple,
-                    fontSize: 31,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+          const Text(
+            'viewsta',
+            style: TextStyle(
+              color: purple,
+              fontSize: 31,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1.1,
             ),
           ),
           const Spacer(),
-          _headerIcon(Icons.bolt_rounded),
-          const SizedBox(width: 18),
           Stack(
             clipBehavior: Clip.none,
             children: [
-              _headerIcon(Icons.notifications_none_rounded),
+              const Icon(
+                Icons.notifications_none_rounded,
+                color: text,
+                size: 28,
+              ),
               Positioned(
-                right: 1,
-                top: 0,
+                right: -1,
+                top: 1,
                 child: Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: const BoxDecoration(
-                    color: Colors.red,
+                    color: Color(0xFFFF3B5C),
                     shape: BoxShape.circle,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 18),
-          _headerIcon(Icons.search_rounded),
-        ],
-      ),
-    );
-  }
-
-  Widget _headerIcon(IconData icon) {
-    return Icon(icon, color: text, size: 30);
-  }
-
-  Widget _streamTabs() {
-    const tabs = ['For You', 'Following', 'Fresh'];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 4, 16, 10),
-      child: Row(
-        children: [
-          for (int i = 0; i < tabs.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(right: 26),
-              child: GestureDetector(
-                onTap: () => setState(() => _streamTab = i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _streamTab == i ? purple : Colors.transparent,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Text(
-                    tabs[i],
-                    style: TextStyle(
-                      color: _streamTab == i ? Colors.white : text,
-                      fontSize: 16,
-                      fontWeight: _streamTab == i
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                  ),
-                ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: _showTuneSheet,
+            child: const SizedBox(
+              width: 30,
+              height: 30,
+              child: Icon(
+                Icons.tune_rounded,
+                color: text,
+                size: 27,
               ),
-            ),
-          const Spacer(),
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: purple, width: 1.5),
-            ),
-            child: const Icon(
-              Icons.tune_rounded,
-              color: purple,
-              size: 24,
             ),
           ),
         ],
@@ -205,48 +162,175 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _moodRow() {
-    const moods = [
-      ('🔥', 'Chill'),
-      ('📈', 'Trending'),
-      ('🎨', 'Creative'),
-      ('🌎', 'Explore'),
-      ('😀', 'Fun'),
-    ];
+  Widget _streamTabs() {
+    const tabs = ['For You', 'Following', 'Fresh'];
 
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 22),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: moods.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final mood = moods[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE5E5E9)),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(30, 4, 30, 4),
+      child: Row(
+        children: [
+          for (int i = 0; i < tabs.length; i++) ...[
+            GestureDetector(
+              onTap: () => setState(() => _streamTab = i),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 7, bottom: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tabs[i],
+                      style: TextStyle(
+                        color: _streamTab == i
+                            ? text
+                            : const Color(0xFFD1D1D7),
+                        fontSize: 15,
+                        fontWeight: _streamTab == i
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: _streamTab == i ? 66 : 0,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: purple,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                Text(mood.$1, style: const TextStyle(fontSize: 17)),
-                const SizedBox(width: 7),
-                Text(
-                  mood.$2,
-                  style: const TextStyle(
-                    color: text,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+            if (i != tabs.length - 1) const SizedBox(width: 38),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _moments() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: Color(0xFF1D1D22), height: 1),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 13, 30, 7),
+          child: Row(
+            children: [
+              const Text(
+                'Moments',
+                style: TextStyle(
+                  color: text,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'View all',
+                style: TextStyle(
+                  color: purple,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 104,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: 6,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, index) => _moment(isOwn: index == 0),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _moment({required bool isOwn}) {
+    return SizedBox(
+      width: 76,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [
+                      purple,
+                      Color(0xFFDA3DFF),
+                      Color(0xFFFF9A7A),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-              ],
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: const Color(0xFF111116),
+                    backgroundImage: isOwn && _user?.photoURL != null
+                        ? NetworkImage(_user!.photoURL!)
+                        : null,
+                    child: isOwn && _user?.photoURL != null
+                        ? null
+                        : const Icon(
+                            Icons.person_outline_rounded,
+                            color: Color(0xFF777781),
+                            size: 28,
+                          ),
+                  ),
+                ),
+              ),
+              if (isOwn)
+                Positioned(
+                  right: -1,
+                  bottom: -1,
+                  child: Container(
+                    width: 25,
+                    height: 25,
+                    decoration: const BoxDecoration(
+                      color: purple,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: text,
+                      size: 19,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            isOwn ? 'Your Moment' : '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: text,
+              fontSize: 11,
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -258,16 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFE3E3E7)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
+        color: card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _postHeader(),
           if (hasImage)
             AspectRatio(
-              aspectRatio: 0.8,
+              aspectRatio: 1.35,
               child: Image.network(
                 post.imageUrl,
                 width: double.infinity,
@@ -290,44 +367,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 post.text,
                 style: const TextStyle(
                   color: text,
-                  fontSize: 16,
-                  height: 1.45,
+                  fontSize: 15,
+                  height: 1.4,
                 ),
               ),
             )
           else
             _mediaFallback(),
           _actions(post),
-          if (post.text.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 5),
-              child: Text(
-                post.text,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: text,
-                  fontSize: 14,
-                  height: 1.4,
-                ),
-              ),
-            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 6),
             child: Text(
-              comments == 0 ? 'View comments' : 'View all $comments comments',
+              comments == 0
+                  ? 'View all comments'
+                  : 'View all $comments comments',
               style: const TextStyle(
                 color: muted,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: 12,
               ),
             ),
           ),
           const Padding(
-            padding: EdgeInsets.fromLTRB(18, 0, 18, 15),
+            padding: EdgeInsets.fromLTRB(18, 0, 18, 14),
             child: Text(
               'Just now',
-              style: TextStyle(color: muted, fontSize: 11),
+              style: TextStyle(
+                color: muted,
+                fontSize: 10,
+              ),
             ),
           ),
         ],
@@ -337,58 +404,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _postHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(17, 14, 14, 13),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
       child: Row(
         children: [
           Container(
-            width: 47,
-            height: 47,
+            width: 44,
+            height: 44,
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: purple, width: 1.8),
+              border: Border.all(color: purple, width: 1.6),
             ),
-            child: const CircleAvatar(
-              backgroundColor: Color(0xFFF1ECFF),
-              child: Icon(
-                Icons.person_outline_rounded,
-                color: purple,
-                size: 24,
-              ),
+            child: CircleAvatar(
+              backgroundColor: const Color(0xFF111116),
+              backgroundImage: _user?.photoURL != null
+                  ? NetworkImage(_user!.photoURL!)
+                  : null,
+              child: _user?.photoURL != null
+                  ? null
+                  : const Icon(
+                      Icons.person_outline_rounded,
+                      color: Color(0xFF8E8E98),
+                      size: 23,
+                    ),
             ),
           ),
-          const SizedBox(width: 11),
-          const Expanded(
+          const SizedBox(width: 10),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      'View Creator',
-                      style: TextStyle(
-                        color: text,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                    Flexible(
+                      child: Text(
+                        _displayName,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    SizedBox(width: 5),
-                    Icon(
+                    const SizedBox(width: 4),
+                    const Icon(
                       Icons.verified_rounded,
                       color: Color(0xFF1689F5),
-                      size: 16,
+                      size: 14,
                     ),
                   ],
                 ),
-                SizedBox(height: 3),
-                Text(
-                  '5 days ago',
-                  style: TextStyle(color: muted, fontSize: 12),
+                const SizedBox(height: 2),
+                const Text(
+                  '2h ago',
+                  style: TextStyle(
+                    color: muted,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.more_vert_rounded, color: text, size: 25),
+          const Icon(
+            Icons.more_vert_rounded,
+            color: text,
+            size: 22,
+          ),
         ],
       ),
     );
@@ -396,49 +478,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _actions(PostModel post) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
       child: Row(
         children: [
           _action(
             Icons.favorite_border_rounded,
             '${post.likes}',
             'Glow',
-            const Color(0xFFFF405D),
             () => _firestoreService.likePost(post.id),
           ),
           _action(
             Icons.chat_bubble_outline_rounded,
             '${post.comments.length}',
             'Voice',
-            const Color(0xFF8B5CF6),
             () {},
           ),
           _action(
             Icons.graphic_eq_rounded,
             '0',
             'Pass',
-            const Color(0xFF38A8FF),
             () {},
           ),
           _action(
             Icons.bookmark_border_rounded,
-            '0',
+            '',
             'Vault',
-            const Color(0xFF8AD51B),
             () {},
           ),
           _action(
             Icons.auto_awesome_rounded,
             '',
             'Vibe',
-            const Color(0xFF9B5CFF),
             () {},
-          ),
-          const Spacer(),
-          const Icon(
-            Icons.bookmark_border_rounded,
-            color: text,
-            size: 28,
           ),
         ],
       ),
@@ -449,28 +520,27 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData icon,
     String count,
     String label,
-    Color color,
     VoidCallback onTap,
   ) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
+          padding: const EdgeInsets.symmetric(vertical: 1),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: color, size: 27),
+                  Icon(icon, color: text, size: 25),
                   if (count.isNotEmpty) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 3),
                     Text(
                       count,
                       style: const TextStyle(
                         color: text,
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -480,10 +550,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 3),
               Text(
                 label,
-                style: TextStyle(
-                  color: color,
+                style: const TextStyle(
+                  color: text,
                   fontSize: 10,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -496,13 +566,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _mediaFallback() {
     return Container(
       width: double.infinity,
-      height: 300,
-      color: const Color(0xFFF7F7FA),
+      height: 280,
+      color: const Color(0xFF0D0D11),
       child: const Center(
         child: Icon(
           Icons.image_outlined,
-          color: purple,
-          size: 42,
+          color: Color(0xFF5B5B66),
+          size: 38,
         ),
       ),
     );
@@ -510,20 +580,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _message(IconData icon, String message) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-      padding: const EdgeInsets.all(28),
+      margin: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE7E7EB)),
-        borderRadius: BorderRadius.circular(18),
+        color: card,
+        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          Icon(icon, color: purple, size: 30),
-          const SizedBox(height: 10),
+          Icon(icon, color: purple, size: 28),
+          const SizedBox(height: 9),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: muted, fontSize: 13),
+            style: const TextStyle(
+              color: muted,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -534,11 +608,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        height: 82,
+        height: 72,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: background,
           border: Border(
-            top: BorderSide(color: Color(0xFFE8E8EC)),
+            top: BorderSide(color: Color(0xFF202026)),
           ),
         ),
         child: Row(
@@ -548,23 +622,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Center(
                 child: Container(
-                  width: 62,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
                     color: purple,
-                    boxShadow: [
-                      BoxShadow(
-                        color: purple.withValues(alpha: 0.28),
-                        blurRadius: 14,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                    shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.add_rounded,
-                    color: Colors.white,
-                    size: 38,
+                    color: text,
+                    size: 34,
                   ),
                 ),
               ),
@@ -585,19 +652,104 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(
             icon,
             color: selected ? purple : text,
-            size: 26,
+            size: 24,
           ),
           const SizedBox(height: 3),
           Text(
             label,
             style: TextStyle(
               color: selected ? purple : text,
-              fontSize: 11,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 10,
+              fontWeight:
+                  selected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showTuneSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF111116),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Tune your feed',
+                  style: TextStyle(
+                    color: text,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Choose what you want to see more of.',
+                  style: TextStyle(color: muted, fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                _tuneOption(
+                  'For You',
+                  'Personalized recommendations',
+                  Icons.auto_awesome_rounded,
+                ),
+                _tuneOption(
+                  'Fresh',
+                  'Show newer posts first',
+                  Icons.fiber_new_rounded,
+                ),
+                _tuneOption(
+                  'Following',
+                  'Prioritize creators you follow',
+                  Icons.people_outline_rounded,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tuneOption(
+    String title,
+    String subtitle,
+    IconData icon,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A22),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: purple, size: 19),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: text,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: muted, fontSize: 11),
+      ),
+      onTap: () => Navigator.pop(context),
     );
   }
 }
