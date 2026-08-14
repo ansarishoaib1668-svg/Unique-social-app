@@ -14,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _streamTab = 0;
   final FirestoreService _firestoreService = FirestoreService();
+  final Map<String, bool> _glowStates = {};
+  final Set<String> _glowLoading = {};
 
   static const purple = Color(0xFF7C3AED);
   static const background = Color(0xFF000000);
@@ -477,15 +479,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _actions(PostModel post) {
+    final glowed = _glowStates[post.id] ?? false;
+    final loading = _glowLoading.contains(post.id);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
       child: Row(
         children: [
           _action(
-            Icons.favorite_border_rounded,
+            glowed
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
             '${post.likes}',
             'Glow',
-            () => _firestoreService.likePost(post.id),
+            loading ? () {} : () => _toggleGlow(post),
+            iconColor: glowed ? const Color(0xFFFF3B5C) : text,
           ),
           _action(
             Icons.chat_bubble_outline_rounded,
@@ -516,12 +524,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _toggleGlow(PostModel post) async {
+    final uid = _user?.uid;
+
+    if (uid == null || _glowLoading.contains(post.id)) return;
+
+    final current = _glowStates[post.id] ?? false;
+    final next = !current;
+
+    setState(() {
+      _glowStates[post.id] = next;
+      _glowLoading.add(post.id);
+    });
+
+    try {
+      await _firestoreService.setGlow(post.id, uid, next);
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _glowStates[post.id] = current;
+      });
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        _glowLoading.remove(post.id);
+      });
+    }
+  }
+
   Widget _action(
     IconData icon,
     String count,
     String label,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    Color iconColor = text,
+  }) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -533,7 +572,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: text, size: 25),
+                  Icon(icon, color: iconColor, size: 25),
                   if (count.isNotEmpty) ...[
                     const SizedBox(width: 3),
                     Text(
