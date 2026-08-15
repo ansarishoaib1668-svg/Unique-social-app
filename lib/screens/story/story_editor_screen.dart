@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../services/cloudinary_service.dart';
 import '../../services/story_service.dart';
+import 'story_music_selection_screen.dart';
 
 class StoryEditorScreen extends StatefulWidget {
   final File file;
@@ -36,6 +37,7 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
   bool _uploading = false;
   bool _drawing = false;
   String _mood = 'Chill Vibes';
+  String? _selectedMusic;
 
   final List<Offset> _currentStroke = [];
   final List<List<Offset>> _strokes = [];
@@ -60,6 +62,21 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
   void dispose() {
     _video?.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectMusic() async {
+    final result = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const StoryMusicSelectionScreen(),
+      ),
+    );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      _selectedMusic = result['title'];
+    });
   }
 
   Future<void> _addText() async {
@@ -353,6 +370,11 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
                       _chip('Poll', Icons.poll_outlined),
                       _chip('Questions', Icons.help_outline_rounded),
                       _chip('GIF', Icons.gif_box_outlined),
+                      _chip(
+                        _selectedMusic ?? 'Music',
+                        Icons.music_note_rounded,
+                        onPressed: _selectMusic,
+                      ),
                     ],
                   ),
                 ),
@@ -484,11 +506,15 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
     );
   }
 
-  Widget _chip(String label, IconData icon) {
+  Widget _chip(
+    String label,
+    IconData icon, {
+    VoidCallback? onPressed,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
-        onPressed: () {},
+        onPressed: onPressed ?? () {},
         backgroundColor: const Color(0xAA211A2C),
         side: const BorderSide(
           color: Color(0xFF7C3AED),
