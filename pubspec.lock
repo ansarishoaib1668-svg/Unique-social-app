@@ -688,6 +688,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  perfect_freehand:
+    dependency: "direct main"
+    description:
+      name: perfect_freehand
+      sha256: f42b8164c4e7e689b278f4e2e8e8f5006e716f8c127eb44404f21bd73b1d3b56
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.2+1"
   petitparser:
     dependency: transitive
     description:
@@ -696,6 +704,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
+  photo_manager:
+    dependency: "direct main"
+    description:
+      name: photo_manager
+      sha256: "2d00a785b501bf1e5f6180bbef772846e767be11d45d11112b63092ef54a419e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.12.0"
+  photo_manager_image_provider:
+    dependency: "direct main"
+    description:
+      name: photo_manager_image_provider
+      sha256: b6015b67b32f345f57cf32c126f871bced2501236c405aafaefa885f7c821e4f
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   platform:
     dependency: transitive
     description:
