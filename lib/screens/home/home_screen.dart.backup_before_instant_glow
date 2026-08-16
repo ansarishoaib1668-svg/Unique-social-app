@@ -17,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _streamTab = 0;
   final FirestoreService _firestoreService = FirestoreService();
   final Map<String, bool> _glowStates = {};
-  final Map<String, int> _localGlowCounts = {};
   final Set<String> _glowLoading = {};
 
   static const purple = Color(0xFF7C3AED);
@@ -477,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _action(
             glowed ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            '${_localGlowCounts[post.id] ?? post.likes}',
+            '${post.likes}',
             'Glow',
             loading ? () {} : () => _toggleGlow(post),
             iconColor: glowed ? const Color(0xFFFF3B5C) : text,
@@ -504,12 +503,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final current = _glowStates[post.id] ?? false;
     final next = !current;
 
-    final oldCount = _localGlowCounts[post.id] ?? post.likes;
-    final newCount = next ? oldCount + 1 : oldCount - 1;
-
     setState(() {
       _glowStates[post.id] = next;
-      _localGlowCounts[post.id] = newCount;
       _glowLoading.add(post.id);
     });
 
@@ -520,7 +515,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _glowStates[post.id] = current;
-        _localGlowCounts[post.id] = oldCount;
       });
     } finally {
       if (mounted) {
