@@ -43,9 +43,9 @@ class FirestoreService {
       postRef.get(),
     ]);
 
-    final action = results[0] as DocumentSnapshot<Map<String, dynamic>>;
-    final vault = results[1] as DocumentSnapshot<Map<String, dynamic>>;
-    final post = results[2] as DocumentSnapshot<Map<String, dynamic>>;
+    final action = results[0];
+    final vault = results[1];
+    final post = results[2];
 
     final actionData = action.data();
     final postData = post.data();

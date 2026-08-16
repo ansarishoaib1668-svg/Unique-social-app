@@ -252,7 +252,7 @@ class _MomentsScreenState extends State<MomentsScreen> {
                 Image.network(
                   data['mediaUrl'] ?? '',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (_, _, _) {
                     return Container(
                       color: const Color(0xFF1A1A22),
                       child: const Icon(
@@ -528,7 +528,7 @@ class _MomentViewerScreenState extends State<MomentViewerScreen> {
             Image.network(
               story['mediaUrl'] ?? '',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(color: const Color(0xFF111116));
               },
             ),

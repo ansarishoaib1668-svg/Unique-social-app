@@ -364,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 post.imageUrl,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _mediaFallback(),
+                errorBuilder: (_, _, _) => _mediaFallback(),
               ),
             )
           else if (post.text.trim().isNotEmpty)

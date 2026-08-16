@@ -1,3 +1,4 @@
+// ignore_for_file: dangling_library_doc_comments, unnecessary_import, constant_identifier_names, unnecessary_const
 /// The Flutter plugin for creating thumbnail from video
 ///
 /// To use, import `package:video_thumbnail/video_thumbnail.dart`.
