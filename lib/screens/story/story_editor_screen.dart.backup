@@ -37,7 +37,7 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
   bool _uploading = false;
   bool _drawing = false;
   String _mood = 'Chill Vibes';
-  Map<String, String>? _selectedMusic;
+  String? _selectedMusic;
 
   final List<Offset> _currentStroke = [];
   final List<List<Offset>> _strokes = [];
@@ -75,7 +75,7 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
     if (!mounted || result == null) return;
 
     setState(() {
-      _selectedMusic = result;
+      _selectedMusic = result['title'];
     });
   }
 
@@ -186,9 +186,6 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
         mediaUrl: url,
         mediaType: widget.isVideo ? 'video' : 'image',
         mood: _mood,
-        musicTitle: _selectedMusic?['title'],
-        musicArtist: _selectedMusic?['artist'],
-        musicPreviewUrl: _selectedMusic?['previewUrl'],
       );
 
       if (!mounted) return;
@@ -374,7 +371,7 @@ class _StoryEditorScreenState extends State<StoryEditorScreen> {
                       _chip('Questions', Icons.help_outline_rounded),
                       _chip('GIF', Icons.gif_box_outlined),
                       _chip(
-                        _selectedMusic?['title'] ?? 'Music',
+                        _selectedMusic ?? 'Music',
                         Icons.music_note_rounded,
                         onPressed: _selectMusic,
                       ),

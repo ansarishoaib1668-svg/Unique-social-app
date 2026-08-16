@@ -11,9 +11,6 @@ class StoryService {
     required String mediaType,
     String mood = 'Chill',
     bool live = false,
-    String? musicTitle,
-    String? musicArtist,
-    String? musicPreviewUrl,
   }) async {
     final user = _auth.currentUser;
 
@@ -40,9 +37,6 @@ class StoryService {
       'mediaType': mediaType,
       'mood': mood,
       'live': live,
-      'musicTitle': musicTitle,
-      'musicArtist': musicArtist,
-      'musicPreviewUrl': musicPreviewUrl,
       'createdAt': now,
       'expiresAt': expiresAt,
       'viewedBy': <String>[],

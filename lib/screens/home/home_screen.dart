@@ -517,11 +517,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _glowStates[post.id] = current;
       });
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        _glowLoading.remove(post.id);
-      });
+      if (mounted) {
+        setState(() {
+          _glowLoading.remove(post.id);
+        });
+      }
     }
   }
 

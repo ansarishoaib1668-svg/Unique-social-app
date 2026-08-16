@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
 class StoryViewerScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class StoryViewerScreen extends StatefulWidget {
 class _StoryViewerScreenState extends State<StoryViewerScreen> {
   late int currentIndex;
   VideoPlayerController? videoController;
+  final AudioPlayer audioPlayer = AudioPlayer();
   bool paused = false;
 
   @override
@@ -29,15 +31,26 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 
   Future<void> loadStory() async {
     videoController?.dispose();
+    await audioPlayer.stop();
 
     final story = widget.stories[currentIndex];
 
     if (story['mediaType'] == 'video') {
       videoController =
           VideoPlayerController.networkUrl(Uri.parse(story['mediaUrl']));
-
       await videoController!.initialize();
       videoController!.play();
+    }
+
+    final musicUrl = story['musicPreviewUrl'];
+
+    if (musicUrl is String && musicUrl.isNotEmpty) {
+      try {
+        await audioPlayer.setUrl(musicUrl);
+        await audioPlayer.play();
+      } catch (_) {
+        // Music preview unavailable; story media can still play.
+      }
     }
 
     if (mounted) {
@@ -64,6 +77,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   @override
   void dispose() {
     videoController?.dispose();
+    audioPlayer.dispose();
     super.dispose();
   }
 
@@ -78,12 +92,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
           setState(() {
             paused = true;
             videoController?.pause();
+            audioPlayer.pause();
           });
         },
         onLongPressUp: () {
           setState(() {
             paused = false;
             videoController?.play();
+            audioPlayer.play();
           });
         },
         onTapUp: (details) {
