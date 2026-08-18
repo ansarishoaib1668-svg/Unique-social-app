@@ -5,6 +5,7 @@ import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
 import '../moments/moments_screen.dart';
 import '../story/story_upload_screen.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -640,16 +641,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             _navItem(Icons.chat_bubble_outline_rounded, 'Chat', false),
-            _navItem(Icons.person_outline_rounded, 'Profile', false),
+            _navItem(Icons.person_outline_rounded, 'Profile', false, onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())); }),
           ],
         ),
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label, bool selected) {
+  Widget _navItem(IconData icon, String label, bool selected, {VoidCallback? onTap}) {
     return Expanded(
-      child: Column(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: selected ? purple : text, size: 24),
@@ -663,6 +667,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
