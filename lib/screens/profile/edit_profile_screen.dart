@@ -14,6 +14,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _usernameController = TextEditingController();
   final _bioController = TextEditingController();
 
+  final _locationController = TextEditingController();
+  final _interestsController = TextEditingController();
+  final _websiteController = TextEditingController();
+
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
 
@@ -21,9 +25,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _saving = false;
 
   static const purple = Color(0xFF7C3AED);
-  static const background = Color(0xFF0F0F12);
-  static const card = Color(0xFF1A1A22);
-  static const muted = Color(0xFFA1A1AA);
+  static const background = Colors.white;
+  static const card = Color(0xFFF7F7FA);
+  static const muted = Color(0xFF71717A);
+  static const text = Color(0xFF18181B);
+  static const border = Color(0xFFE4E4E7);
 
   @override
   void initState() {
@@ -45,6 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final data = snapshot.data() ?? {};
 
+      // Existing fields — unchanged.
       _nameController.text =
           (data['displayName'] as String?)?.trim() ??
           user.displayName ??
@@ -55,6 +62,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       _bioController.text =
           (data['bio'] as String?)?.trim() ?? '';
+
+      // New fields.
+      _locationController.text =
+          (data['location'] as String?)?.trim() ?? '';
+
+      _interestsController.text =
+          (data['interests'] as String?)?.trim() ?? '';
+
+      _websiteController.text =
+          (data['website'] as String?)?.trim() ?? '';
     } catch (_) {
       _nameController.text = user.displayName ?? '';
     }
@@ -69,6 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (user == null) return;
 
+    // Existing fields — same validation.
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim().toLowerCase();
     final bio = _bioController.text.trim();
@@ -91,6 +109,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'displayName': name,
         'username': username,
         'bio': bio,
+
+        // New profile information.
+        'location': _locationController.text.trim(),
+        'interests': _interestsController.text.trim(),
+        'website': _websiteController.text.trim(),
+
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -123,11 +147,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
   }
 
+  String _month(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return months[month - 1];
+  }
+
+  String _joinDate() {
+    final createdAt = _auth.currentUser?.metadata.creationTime;
+
+    if (createdAt == null) {
+      return 'Automatically added';
+    }
+
+    return '${createdAt.day.toString().padLeft(2, '0')} '
+        '${_month(createdAt.month)} '
+        '${createdAt.year}';
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
+
+    _locationController.dispose();
+    _interestsController.dispose();
+    _websiteController.dispose();
+
     super.dispose();
   }
 
@@ -135,22 +195,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
+
       appBar: AppBar(
         backgroundColor: background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          color: Colors.white,
+          color: text,
           onPressed: () => Navigator.pop(context),
         ),
+
+        centerTitle: true,
+
         title: const Text(
           'Edit Profile',
           style: TextStyle(
-            color: Colors.white,
+            color: text,
             fontSize: 19,
             fontWeight: FontWeight.w700,
           ),
         ),
+
         actions: [
           TextButton(
             onPressed: _saving ? null : _saveProfile,
@@ -173,6 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ],
       ),
+
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(
@@ -181,21 +249,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             )
           : ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                40,
+              ),
               children: [
+                _profilePhoto(),
+
+                const SizedBox(height: 10),
+
+                // Existing fields stay here.
                 _field(
                   label: 'Name',
                   controller: _nameController,
                   hint: 'Your name',
                 ),
-                const SizedBox(height: 18),
+
+                const SizedBox(height: 16),
+
                 _field(
                   label: 'Username',
                   controller: _usernameController,
                   hint: 'username',
                   prefix: '@',
                 ),
-                const SizedBox(height: 18),
+
+                const SizedBox(height: 16),
+
                 _field(
                   label: 'Bio',
                   controller: _bioController,
@@ -203,39 +285,193 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   maxLines: 4,
                   maxLength: 150,
                 ),
-                const SizedBox(height: 30),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF292930),
-                    ),
+
+                const SizedBox(height: 16),
+
+                // NEW: Location.
+                _field(
+                  label: 'Location',
+                  controller: _locationController,
+                  hint: 'City, Country',
+                  prefixIcon: Icons.location_on_outlined,
+                ),
+
+                const SizedBox(height: 16),
+
+                // NEW: About / Interests.
+                _field(
+                  label: 'About / Interests',
+                  controller: _interestsController,
+                  hint: 'Travel • Music • Photography',
+                  maxLines: 2,
+                  prefixIcon: Icons.auto_awesome_outlined,
+                ),
+
+                const SizedBox(height: 16),
+
+                // NEW: Website.
+                _field(
+                  label: 'Website / Link',
+                  controller: _websiteController,
+                  hint: 'https://yourwebsite.com',
+                  prefixIcon: Icons.link_rounded,
+                  keyboardType: TextInputType.url,
+                ),
+
+                const SizedBox(height: 18),
+
+                // Automatic Join Date.
+                _joinCard(),
+
+                const SizedBox(height: 18),
+
+                _infoCard(),
+              ],
+            ),
+    );
+  }
+
+  Widget _profilePhoto() {
+    return Center(
+      child: Column(
+        children: [
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: card,
+              border: Border.all(
+                color: const Color(0xFFE9D5FF),
+                width: 2,
+              ),
+            ),
+            child: const Icon(
+              Icons.person_outline_rounded,
+              color: muted,
+              size: 42,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          TextButton.icon(
+            onPressed: () {
+              // Existing photo functionality can be connected later.
+            },
+            icon: const Icon(
+              Icons.camera_alt_outlined,
+              size: 18,
+              color: purple,
+            ),
+            label: const Text(
+              'Change Photo',
+              style: TextStyle(
+                color: purple,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _joinCard() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEDE9FE),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Icon(
+              Icons.calendar_today_outlined,
+              color: purple,
+              size: 20,
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Joined Viewsta',
+                  style: TextStyle(
+                    color: text,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        color: muted,
-                        size: 21,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'You can change your profile information anytime.',
-                          style: TextStyle(
-                            color: muted,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Automatically recorded',
+                  style: TextStyle(
+                    color: muted,
+                    fontSize: 12,
                   ),
                 ),
               ],
             ),
+          ),
+
+          Text(
+            _joinDate(),
+            style: const TextStyle(
+              color: muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoCard() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            color: purple,
+            size: 20,
+          ),
+
+          SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              'You can update your profile information anytime.',
+              style: TextStyle(
+                color: muted,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -244,6 +480,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required TextEditingController controller,
     required String hint,
     String? prefix,
+    IconData? prefixIcon,
+    TextInputType? keyboardType,
     int maxLines = 1,
     int? maxLength,
   }) {
@@ -253,47 +491,78 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Text(
           label,
           style: const TextStyle(
-            color: Colors.white,
+            color: text,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 7),
+
         TextField(
           controller: controller,
           maxLines: maxLines,
           maxLength: maxLength,
+          keyboardType: keyboardType,
+
           style: const TextStyle(
-            color: Colors.white,
+            color: text,
             fontSize: 15,
           ),
+
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: muted),
+
+            hintStyle: const TextStyle(
+              color: muted,
+            ),
+
             prefixText: prefix,
+
             prefixStyle: const TextStyle(
-              color: Colors.white70,
+              color: text,
               fontSize: 15,
             ),
+
+            prefixIcon: prefixIcon == null
+                ? null
+                : Icon(
+                    prefixIcon,
+                    color: muted,
+                    size: 20,
+                  ),
+
             filled: true,
             fillColor: card,
-            counterStyle: const TextStyle(color: muted),
+
+            counterStyle: const TextStyle(
+              color: muted,
+            ),
+
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF292930),
+                color: border,
               ),
             ),
+
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF292930),
+                color: border,
               ),
             ),
+
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
                 color: purple,
+                width: 1.5,
               ),
             ),
           ),

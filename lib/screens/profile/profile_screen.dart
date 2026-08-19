@@ -49,6 +49,14 @@ class ProfileScreen extends StatelessWidget {
 
         final bio = _readString(data['bio']) ?? 'Your bio goes here.';
 
+        final location = _readString(data['location']);
+        final interests = _readString(data['interests']);
+        final website = _readString(data['website']);
+
+        final joinedAt = data['createdAt'] is Timestamp
+            ? (data['createdAt'] as Timestamp).toDate()
+            : user.metadata.creationTime;
+
         final photoUrl =
             _readString(data['photoUrl']) ??
             (user.photoURL?.trim().isNotEmpty == true
@@ -71,7 +79,15 @@ class ProfileScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: _stats(postsCount, followersCount, followingCount),
                 ),
-                SliverToBoxAdapter(child: _bio(bio)),
+                SliverToBoxAdapter(
+                  child: _profileInfo(
+                    bio,
+                    location,
+                    interests,
+                    website,
+                    joinedAt,
+                  ),
+                ),
                 SliverToBoxAdapter(child: _actions(context)),
                 SliverToBoxAdapter(child: _highlights()),
                 SliverToBoxAdapter(child: _tabs()),
@@ -212,18 +228,103 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _bio(String bio) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
+  Widget _profileInfo(
+    String bio,
+    String? location,
+    String? interests,
+    String? website,
+    DateTime? joinedAt,
+  ) {
+    String? joinedText;
+
+    if (joinedAt != null) {
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+
+      joinedText =
+          '${joinedAt.day.toString().padLeft(2, '0')} '
+          '${months[joinedAt.month - 1]} '
+          '${joinedAt.year}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your bio goes here.',
-            style: TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+            bio,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              height: 1.4,
+            ),
           ),
+
+          if (location != null) ...[
+            const SizedBox(height: 8),
+            _profileInfoRow(
+              Icons.location_on_outlined,
+              location,
+            ),
+          ],
+
+          if (interests != null) ...[
+            const SizedBox(height: 7),
+            _profileInfoRow(
+              Icons.auto_awesome_outlined,
+              interests,
+            ),
+          ],
+
+          if (website != null) ...[
+            const SizedBox(height: 7),
+            _profileInfoRow(
+              Icons.link_rounded,
+              website,
+              purple: true,
+            ),
+          ],
+
+          if (joinedText != null) ...[
+            const SizedBox(height: 8),
+            _profileInfoRow(
+              Icons.calendar_today_outlined,
+              'Joined Viewsta $joinedText',
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _profileInfoRow(
+    IconData icon,
+    String value, {
+    bool purple = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 17,
+          color: purple ? _purple : _muted,
+        ),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: purple ? const Color(0xFFB9A0FF) : _muted,
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -236,7 +337,18 @@ class ProfileScreen extends StatelessWidget {
             child: _ProfileButton(
               label: 'Edit Profile',
               filled: true,
-              onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())); },
+              onTap: () async {
+                final updated = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EditProfileScreen(),
+                  ),
+                );
+
+                if (updated == true) {
+                  // Profile data is reloaded when the screen rebuilds.
+                }
+              },
             ),
           ),
           const SizedBox(width: 10),
