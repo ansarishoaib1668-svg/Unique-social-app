@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -23,6 +27,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _loading = true;
   bool _saving = false;
+
+  File? _selectedPhoto;
+  String? _photoUrl;
+  bool _uploadingPhoto = false;
+
+  final _picker = ImagePicker();
+
 
   static const purple = Color(0xFF7C3AED);
   static const background = Colors.white;
@@ -50,6 +61,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           await _firestore.collection('users').doc(user.uid).get();
 
       final data = snapshot.data() ?? {};
+
+      _photoUrl =
+          (data['photoUrl'] as String?)?.trim();
 
       // Existing fields — unchanged.
       _nameController.text =
@@ -81,6 +95,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<bool> _isUsernameAvailable(
+    String username,
+    String currentUid,
+  ) async {
+    final result = await _firestore
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .limit(1)
+        .get();
+
+    if (result.docs.isEmpty) {
+      return true;
+    }
+
+    return result.docs.first.id == currentUid;
+  }
+
   Future<void> _saveProfile() async {
     final user = _auth.currentUser;
 
@@ -102,6 +133,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     setState(() => _saving = true);
+
+    try {
+      final usernameAvailable =
+          await _isUsernameAvailable(username, user.uid);
+
+      if (!usernameAvailable) {
+        if (mounted) {
+          setState(() => _saving = false);
+          _showMessage('Username already taken.');
+        }
+        return;
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _saving = false);
+        _showMessage('Unable to check username right now.');
+      }
+      return;
+    }
 
     try {
       await _firestore.collection('users').doc(user.uid).set({
@@ -331,6 +381,83 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  Future<void> _changePhoto() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 100,
+      );
+
+      if (picked == null) return;
+
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(
+          ratioX: 1,
+          ratioY: 1,
+        ),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Set Profile Photo',
+            toolbarColor: Colors.white,
+            toolbarWidgetColor: purple,
+            backgroundColor: Colors.white,
+            activeControlsWidgetColor: purple,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Set Profile Photo',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+
+      if (cropped == null || !mounted) return;
+
+      setState(() {
+        _selectedPhoto = File(cropped.path);
+        _uploadingPhoto = true;
+      });
+
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_photos')
+          .child('${user.uid}.jpg');
+
+      await ref.putFile(_selectedPhoto!);
+
+      final photoUrl = await ref.getDownloadURL();
+
+      await _firestore.collection('users').doc(user.uid).set(
+        {
+          'photoUrl': photoUrl,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      await user.updatePhotoURL(photoUrl);
+
+      if (!mounted) return;
+
+      _showMessage('Profile photo updated successfully.');
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Unable to update profile photo right now.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploadingPhoto = false;
+        });
+      }
+    }
+  }
+
   Widget _profilePhoto() {
     return Center(
       child: Column(
@@ -346,27 +473,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: 2,
               ),
             ),
-            child: const Icon(
-              Icons.person_outline_rounded,
-              color: muted,
-              size: 42,
+            child: ClipOval(
+              child: _selectedPhoto != null
+                  ? Image.file(
+                      _selectedPhoto!,
+                      fit: BoxFit.cover,
+                    )
+                  : (_photoUrl != null && _photoUrl!.isNotEmpty)
+                      ? Image.network(
+                          _photoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.person_outline_rounded,
+                            color: muted,
+                            size: 42,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person_outline_rounded,
+                          color: muted,
+                          size: 42,
+                        ),
             ),
           ),
 
           const SizedBox(height: 8),
 
           TextButton.icon(
-            onPressed: () {
-              // Existing photo functionality can be connected later.
-            },
-            icon: const Icon(
-              Icons.camera_alt_outlined,
-              size: 18,
-              color: purple,
-            ),
-            label: const Text(
-              'Change Photo',
-              style: TextStyle(
+            onPressed: _uploadingPhoto ? null : _changePhoto,
+            icon: _uploadingPhoto
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: purple,
+                    ),
+                  )
+                : const Icon(
+                    Icons.camera_alt_outlined,
+                    size: 18,
+                    color: purple,
+                  ),
+            label: Text(
+              _uploadingPhoto ? 'Uploading...' : 'Change Photo',
+              style: const TextStyle(
                 color: purple,
                 fontWeight: FontWeight.w700,
               ),
