@@ -3,8 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import '../../services/cloudinary_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -164,6 +163,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'location': _locationController.text.trim(),
         'interests': _interestsController.text.trim(),
         'website': _websiteController.text.trim(),
+
+        if (_photoUrl != null && _photoUrl!.isNotEmpty)
+          'photoUrl': _photoUrl,
 
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -388,72 +390,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         imageQuality: 100,
       );
 
-      if (picked == null) return;
+      if (picked == null || !mounted) return;
 
-      final cropped = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(
-          ratioX: 1,
-          ratioY: 1,
-        ),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Set Profile Photo',
-            toolbarColor: Colors.white,
-            toolbarWidgetColor: purple,
-            backgroundColor: Colors.white,
-            activeControlsWidgetColor: purple,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Set Profile Photo',
-            aspectRatioLockEnabled: true,
-            resetAspectRatioEnabled: false,
-          ),
-        ],
-      );
-
-      if (cropped == null || !mounted) return;
+      final file = File(picked.path);
 
       setState(() {
-        _selectedPhoto = File(cropped.path);
+        _selectedPhoto = file;
         _uploadingPhoto = true;
       });
 
-      final user = _auth.currentUser;
-      if (user == null) return;
-
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('profile_photos')
-          .child('${user.uid}.jpg');
-
-      await ref.putFile(_selectedPhoto!);
-
-      final photoUrl = await ref.getDownloadURL();
-
-      await _firestore.collection('users').doc(user.uid).set(
-        {
-          'photoUrl': photoUrl,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-
-      await user.updatePhotoURL(photoUrl);
+      final url = await CloudinaryService.uploadFile(file);
 
       if (!mounted) return;
 
-      _showMessage('Profile photo updated successfully.');
-    } catch (_) {
-      if (mounted) {
-        _showMessage('Unable to update profile photo right now.');
-      }
-    } finally {
+      setState(() {
+        _photoUrl = url;
+        _uploadingPhoto = false;
+      });
+
+      _showMessage('Photo uploaded successfully.');
+    } catch (e) {
       if (mounted) {
         setState(() {
           _uploadingPhoto = false;
         });
+        _showMessage('Unable to upload photo.');
       }
     }
   }
