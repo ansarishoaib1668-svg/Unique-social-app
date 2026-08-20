@@ -148,8 +148,8 @@ class ProfileScreen extends StatelessWidget {
               child: CircleAvatar(
                 backgroundColor: _card,
                 backgroundImage:
-                    user?.photoURL != null && user!.photoURL!.isNotEmpty
-                    ? NetworkImage(user.photoURL!)
+                    photoUrl != null && photoUrl.isNotEmpty
+                    ? NetworkImage(photoUrl)
                     : null,
                 child: photoUrl == null
                     ? const Icon(

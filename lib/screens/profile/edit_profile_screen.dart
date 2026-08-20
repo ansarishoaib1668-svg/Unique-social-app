@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import '../../services/cloudinary_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -392,7 +393,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (picked == null || !mounted) return;
 
-      final file = File(picked.path);
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: "Crop Profile Photo",
+            toolbarColor: purple,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: "Crop Profile Photo",
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+
+      if (cropped == null || !mounted) return;
+
+      final file = File(cropped.path);
 
       setState(() {
         _selectedPhoto = file;
@@ -408,17 +428,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _uploadingPhoto = false;
       });
 
-      _showMessage('Photo uploaded successfully.');
+      _showMessage("Photo uploaded successfully.");
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _uploadingPhoto = false;
-        });
-        _showMessage('Unable to upload photo.');
+        setState(() => _uploadingPhoto = false);
+        _showMessage("Unable to crop or upload photo.");
       }
     }
   }
-
   Widget _profilePhoto() {
     return Center(
       child: Column(
