@@ -31,6 +31,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File? _selectedPhoto;
   String? _photoUrl;
   bool _uploadingPhoto = false;
+  double _uploadProgress = 0.0;
 
   final _picker = ImagePicker();
 
@@ -417,15 +418,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() {
         _selectedPhoto = file;
         _uploadingPhoto = true;
+        _uploadProgress = 0.0;
       });
 
-      final url = await CloudinaryService.uploadFile(file);
+      final url = await CloudinaryService.uploadFile(
+        file,
+        onProgress: (progress) {
+          if (mounted) {
+            setState(() {
+              _uploadProgress = progress;
+            });
+          }
+        },
+      );
 
       if (!mounted) return;
 
       setState(() {
         _photoUrl = url;
         _uploadingPhoto = false;
+        _uploadProgress = 1.0;
       });
 
       _showMessage("Photo uploaded successfully.");
@@ -440,38 +452,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Center(
       child: Column(
         children: [
-          Container(
-            width: 92,
-            height: 92,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: card,
-              border: Border.all(
-                color: const Color(0xFFE9D5FF),
-                width: 2,
-              ),
-            ),
-            child: ClipOval(
-              child: _selectedPhoto != null
-                  ? Image.file(
-                      _selectedPhoto!,
-                      fit: BoxFit.cover,
-                    )
-                  : (_photoUrl != null && _photoUrl!.isNotEmpty)
-                      ? Image.network(
-                          _photoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.person_outline_rounded,
-                            color: muted,
-                            size: 42,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person_outline_rounded,
-                          color: muted,
-                          size: 42,
-                        ),
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_uploadingPhoto)
+                  SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: CircularProgressIndicator(
+                      value: _uploadProgress,
+                      strokeWidth: 4,
+                      backgroundColor: const Color(0xFFE9D5FF),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF7C3AED),
+                      ),
+                    ),
+                  ),
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: card,
+                  ),
+                  child: ClipOval(
+                    child: _selectedPhoto != null
+                        ? Image.file(
+                            _selectedPhoto!,
+                            fit: BoxFit.cover,
+                          )
+                        : (_photoUrl != null && _photoUrl!.isNotEmpty)
+                            ? Image.network(
+                                _photoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                  Icons.person_outline_rounded,
+                                  color: muted,
+                                  size: 42,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person_outline_rounded,
+                                color: muted,
+                                size: 42,
+                              ),
+                  ),
+                ),
+              ],
             ),
           ),
 

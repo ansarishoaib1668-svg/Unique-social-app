@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/firestore_service.dart';
 import '../../services/cloudinary_service.dart';
+import 'edit_photo_screen.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -23,18 +24,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<void> pickMedia() async {
     final picker = ImagePicker();
 
-    final file = await picker.pickMedia();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
-    if (file != null) {
-      setState(() {
-        selectedFile = File(file.path);
+    if (file != null && mounted) {
+      final editedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EditPhotoScreen(
+            imageFile: File(file.path),
+          ),
+        ),
+      );
 
-        if (file.path.endsWith('.mp4')) {
-          type = 'mp4';
-        } else {
+      if (editedFile != null && mounted) {
+        setState(() {
+          selectedFile = editedFile;
           type = 'jpg';
-        }
-      });
+        });
+      }
     }
   }
 
