@@ -52,9 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     stream: _firestoreService.getPosts(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(36),
+                        return const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: ColoredBox(
+                            color: background,
                             child: Center(
                               child: CircularProgressIndicator(
                                 color: purple,
@@ -66,27 +67,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       if (snapshot.hasError) {
-                        return SliverToBoxAdapter(
-                          child: _message(
-                            Icons.cloud_off_rounded,
-                            'Unable to load posts right now.',
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: ColoredBox(
+                            color: background,
+                            child: Center(
+                              child: _message(
+                                Icons.cloud_off_rounded,
+                                'Unable to load posts right now.',
+                              ),
+                            ),
                           ),
                         );
                       }
 
                       final posts = snapshot.data ?? <PostModel>[];
 
-                      for (final post in posts) {
-                        if (!_glowStates.containsKey(post.id)) {
-                          _loadGlowState(post);
-                        }
-                      }
-
                       if (posts.isEmpty) {
-                        return SliverToBoxAdapter(
-                          child: _message(
-                            Icons.photo_library_outlined,
-                            'No posts yet.',
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: ColoredBox(
+                            color: background,
+                            child: Center(
+                              child: _message(
+                                Icons.photo_library_outlined,
+                                'No posts yet.',
+                              ),
+                            ),
                           ),
                         );
                       }
@@ -349,36 +356,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _postCard(PostModel post) {
     final hasImage = post.imageUrl.trim().isNotEmpty;
+    final caption = post.text.trim();
     final comments = post.comments.length;
 
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
+      color: background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _postHeader(post),
+
           if (hasImage)
             AspectRatio(
-              aspectRatio: 1.35,
+              aspectRatio: 4 / 5,
               child: Image.network(
                 post.imageUrl.trim(),
                 width: double.infinity,
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;
+
                   return Container(
                     color: const Color(0xFF060608),
                     alignment: Alignment.center,
                     child: const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: 26,
+                      height: 26,
                       child: CircularProgressIndicator(
-                        color: Color(0xFF7C3AED),
+                        color: purple,
                         strokeWidth: 2,
                       ),
                     ),
@@ -388,19 +394,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Container(
                     color: const Color(0xFF060608),
                     alignment: Alignment.center,
-                    child: Column(
+                    child: const Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(
                           Icons.broken_image_outlined,
-                          color: Color(0xFFA2A2AB),
+                          color: muted,
                           size: 38,
                         ),
                         SizedBox(height: 8),
                         Text(
                           'Image unavailable',
                           style: TextStyle(
-                            color: Color(0xFFA2A2AB),
+                            color: muted,
                             fontSize: 12,
                           ),
                         ),
@@ -410,28 +416,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             )
-          else if (post.text.trim().isNotEmpty)
+          else if (caption.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Text(
-                post.text,
-                style: const TextStyle(color: text, fontSize: 15, height: 1.4),
+                caption,
+                style: const TextStyle(
+                  color: text,
+                  fontSize: 15,
+                  height: 1.45,
+                ),
               ),
             )
           else
             _mediaFallback(),
+
           _actions(post),
+
+          if (caption.isNotEmpty && hasImage)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: '@username ',
+                      style: TextStyle(
+                        color: text,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(
+                      text: caption,
+                      style: const TextStyle(
+                        color: text,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 6),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
             child: Text(
               comments == 0
                   ? 'View all comments'
                   : 'View all $comments comments',
-              style: const TextStyle(color: muted, fontSize: 12),
+              style: const TextStyle(
+                color: muted,
+                fontSize: 12,
+              ),
             ),
           ),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: Text(
               _postTime(post.createdAt),
               style: const TextStyle(
@@ -502,47 +545,45 @@ class _HomeScreenState extends State<HomeScreen> {
                 : null;
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: purple,
-                    width: 1.6,
-                  ),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: const Color(0xFF111116),
-                  backgroundImage:
-                      photoUrl != null ? NetworkImage(photoUrl) : null,
-                  child: photoUrl == null
-                      ? const Icon(
-                          Icons.person_outline_rounded,
-                          color: Color(0xFF8E8E98),
-                          size: 23,
-                        )
-                      : null,
-                ),
+              CircleAvatar(
+                radius: 21,
+                backgroundColor: const Color(0xFF111116),
+                backgroundImage:
+                    photoUrl != null ? NetworkImage(photoUrl) : null,
+                child: photoUrl == null
+                    ? const Icon(
+                        Icons.person_outline_rounded,
+                        color: Color(0xFF8E8E98),
+                        size: 22,
+                      )
+                    : null,
               ),
               const SizedBox(width: 10),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '@$username',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: text,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '@$username',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -552,15 +593,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         color: muted,
                         fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
-                Icons.more_vert_rounded,
-                color: text,
-                size: 22,
+
+              IconButton(
+                onPressed: () {},
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                icon: const Icon(
+                  Icons.more_horiz_rounded,
+                  color: text,
+                  size: 22,
+                ),
               ),
             ],
           ),
@@ -569,41 +620,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _loadGlowState(PostModel post) async {
-    final uid = _user?.uid;
-    if (uid == null) return;
-
-    try {
-      final state = await _firestoreService.getPostActionState(
-        post.id,
-        uid,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _glowStates[post.id] = state.glowed;
-        _localGlowCounts[post.id] = post.likes;
-      });
-    } catch (_) {
-      // Keep the existing post state if loading fails.
-    }
-  }
-
   Widget _actions(PostModel post) {
     final glowed = _glowStates[post.id] ?? false;
     final loading = _glowLoading.contains(post.id);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
       child: Row(
         children: [
           _action(
-            glowed ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            glowed
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
             '${_localGlowCounts[post.id] ?? post.likes}',
             'Glow',
             loading ? () {} : () => _toggleGlow(post),
-            iconColor: glowed ? const Color(0xFFFF3B5C) : text,
+            iconColor: glowed
+                ? const Color(0xFFFF3B5C)
+                : text,
           ),
           _action(
             Icons.chat_bubble_outline_rounded,
@@ -611,9 +645,24 @@ class _HomeScreenState extends State<HomeScreen> {
             'Voice',
             () => _openComments(post),
           ),
-          _action(Icons.graphic_eq_rounded, '0', 'Pass', () {}),
-          _action(Icons.bookmark_border_rounded, '', 'Vault', () {}),
-          _action(Icons.auto_awesome_rounded, '', 'Vibe', () {}),
+          _action(
+            Icons.graphic_eq_rounded,
+            '0',
+            'Pass',
+            () {},
+          ),
+          _action(
+            Icons.bookmark_border_rounded,
+            '',
+            'Vault',
+            () {},
+          ),
+          _action(
+            Icons.auto_awesome_rounded,
+            '',
+            'Vibe',
+            () {},
+          ),
         ],
       ),
     );
