@@ -42,9 +42,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _header(),
             Expanded(
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
+              child: ColoredBox(
+                color: background,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
                   SliverToBoxAdapter(child: _streamTabs()),
                   SliverToBoxAdapter(child: _moments()),
                   const SliverToBoxAdapter(child: SizedBox(height: 10)),
@@ -52,10 +54,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     stream: _firestoreService.getPosts(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: ColoredBox(
-                            color: background,
+                        return const SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 180,
                             child: Center(
                               child: CircularProgressIndicator(
                                 color: purple,
@@ -67,10 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       if (snapshot.hasError) {
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: ColoredBox(
-                            color: background,
+                        return SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 180,
                             child: Center(
                               child: _message(
                                 Icons.cloud_off_rounded,
@@ -84,10 +84,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       final posts = snapshot.data ?? <PostModel>[];
 
                       if (posts.isEmpty) {
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: ColoredBox(
-                            color: background,
+                        return SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 180,
                             child: Center(
                               child: _message(
                                 Icons.photo_library_outlined,
@@ -108,8 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 92)),
-                ],
+                    const SliverToBoxAdapter(child: SizedBox(height: 92)),
+                  ],
+                ),
               ),
             ),
           ],
