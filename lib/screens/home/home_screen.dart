@@ -366,10 +366,48 @@ class _HomeScreenState extends State<HomeScreen> {
             AspectRatio(
               aspectRatio: 1.35,
               child: Image.network(
-                post.imageUrl,
+                post.imageUrl.trim(),
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _mediaFallback(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    color: const Color(0xFF060608),
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7C3AED),
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: const Color(0xFF060608),
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.broken_image_outlined,
+                          color: Color(0xFFA2A2AB),
+                          size: 38,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Image unavailable',
+                          style: TextStyle(
+                            color: Color(0xFFA2A2AB),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             )
           else if (post.text.trim().isNotEmpty)
