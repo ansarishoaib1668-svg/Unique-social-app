@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/post_model.dart';
 
@@ -177,7 +178,14 @@ class FirestoreService {
     String? imageUrl,
     String? videoUrl,
   }) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw Exception('User is not signed in');
+    }
+
     await _db.collection('posts').add({
+      'userId': user.uid,
       'text': text,
       'imageUrl': imageUrl ?? '',
       'videoUrl': videoUrl ?? '',

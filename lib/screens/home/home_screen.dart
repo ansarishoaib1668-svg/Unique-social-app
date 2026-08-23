@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/post_model.dart';
@@ -30,10 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   User? get _user => FirebaseAuth.instance.currentUser;
 
-  String get _displayName {
-    final name = _user?.displayName?.trim();
-    return (name == null || name.isEmpty) ? 'You' : name;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +75,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       final posts = snapshot.data ?? <PostModel>[];
+
+                      for (final post in posts) {
+                        if (!_glowStates.containsKey(post.id)) {
+                          _loadGlowState(post);
+                        }
+                      }
 
                       if (posts.isEmpty) {
                         return SliverToBoxAdapter(
@@ -358,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _postHeader(),
+          _postHeader(post),
           if (hasImage)
             AspectRatio(
               aspectRatio: 1.35,
@@ -389,11 +392,14 @@ class _HomeScreenState extends State<HomeScreen> {
               style: const TextStyle(color: muted, fontSize: 12),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(18, 0, 18, 14),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
             child: Text(
-              'Just now',
-              style: TextStyle(color: muted, fontSize: 10),
+              _postTime(post.createdAt),
+              style: const TextStyle(
+                color: muted,
+                fontSize: 10,
+              ),
             ),
           ),
         ],
@@ -401,71 +407,149 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _postHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: purple, width: 1.6),
-            ),
-            child: CircleAvatar(
-              backgroundColor: const Color(0xFF111116),
-              backgroundImage: _user?.photoURL != null
-                  ? NetworkImage(_user!.photoURL!)
-                  : null,
-              child: _user?.photoURL != null
-                  ? null
-                  : const Icon(
-                      Icons.person_outline_rounded,
-                      color: Color(0xFF8E8E98),
-                      size: 23,
-                    ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+  String _postTime(DateTime? time) {
+    if (time == null) return 'Just now';
+
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    }
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    }
+
+    if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    }
+
+    if (difference.inDays == 1) {
+      return 'Yesterday';
+    }
+
+    if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    }
+
+    return '${time.day}/${time.month}/${time.year}';
+  }
+
+  Widget _postHeader(PostModel post) {
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(post.userId)
+          .get(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? {};
+
+        final displayName =
+            data['displayName'] is String &&
+                    (data['displayName'] as String).trim().isNotEmpty
+                ? (data['displayName'] as String).trim()
+                : 'Viewsta User';
+
+        final username =
+            data['username'] is String &&
+                    (data['username'] as String).trim().isNotEmpty
+                ? (data['username'] as String).trim()
+                : 'username';
+
+        final photoUrl =
+            data['photoUrl'] is String &&
+                    (data['photoUrl'] as String).trim().isNotEmpty
+                ? (data['photoUrl'] as String).trim()
+                : null;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: purple,
+                    width: 1.6,
+                  ),
+                ),
+                child: CircleAvatar(
+                  backgroundColor: const Color(0xFF111116),
+                  backgroundImage:
+                      photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null
+                      ? const Icon(
+                          Icons.person_outline_rounded,
+                          color: Color(0xFF8E8E98),
+                          size: 23,
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        _displayName,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: text,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    Text(
+                      '@$username',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: text,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.verified_rounded,
-                      color: Color(0xFF1689F5),
-                      size: 14,
+                    const SizedBox(height: 2),
+                    Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: muted,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                const Text(
-                  '2h ago',
-                  style: TextStyle(color: muted, fontSize: 11),
-                ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.more_vert_rounded,
+                color: text,
+                size: 22,
+              ),
+            ],
           ),
-          const Icon(Icons.more_vert_rounded, color: text, size: 22),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Future<void> _loadGlowState(PostModel post) async {
+    final uid = _user?.uid;
+    if (uid == null) return;
+
+    try {
+      final state = await _firestoreService.getPostActionState(
+        post.id,
+        uid,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _glowStates[post.id] = state.glowed;
+        _localGlowCounts[post.id] = post.likes;
+      });
+    } catch (_) {
+      // Keep the existing post state if loading fails.
+    }
   }
 
   Widget _actions(PostModel post) {
@@ -487,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icons.chat_bubble_outline_rounded,
             '${post.comments.length}',
             'Voice',
-            () {},
+            () => _openComments(post),
           ),
           _action(Icons.graphic_eq_rounded, '0', 'Pass', () {}),
           _action(Icons.bookmark_border_rounded, '', 'Vault', () {}),
@@ -528,6 +612,248 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _glowLoading.remove(post.id);
         });
+      }
+    }
+  }
+
+  void _openComments(PostModel post) {
+    final controller = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.72,
+              minChildSize: 0.45,
+              maxChildSize: 0.94,
+              expand: false,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF101014),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF55555F),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Voice',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(
+                        color: Color(0xFF292930),
+                        height: 1,
+                      ),
+                      Expanded(
+                        child: post.comments.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No voices yet.\nBe the first to say something.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFFA2A2AB),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                itemCount: post.comments.length,
+                                itemBuilder: (context, index) {
+                                  final comment = post.comments[index];
+
+                                  return Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      9,
+                                      16,
+                                      9,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Color(0xFF25252D),
+                                          child: Icon(
+                                            Icons.person_outline_rounded,
+                                            color: Colors.white70,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                '@username',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                comment,
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 13,
+                                                  height: 1.35,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            12,
+                            8,
+                            12,
+                            10 + MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: controller,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                  textInputAction: TextInputAction.send,
+                                  onSubmitted: (_) async {
+                                    await _sendVoiceComment(
+                                      post,
+                                      controller,
+                                      setSheetState,
+                                    );
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Add a voice...',
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFF777780),
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFF1B1B21),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(22),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () async {
+                                  await _sendVoiceComment(
+                                    post,
+                                    controller,
+                                    setSheetState,
+                                  );
+                                },
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: const BoxDecoration(
+                                    color: purple,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.send_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ).whenComplete(controller.dispose);
+  }
+
+  Future<void> _sendVoiceComment(
+    PostModel post,
+    TextEditingController controller,
+    StateSetter setSheetState,
+  ) async {
+    final textValue = controller.text.trim();
+    final uid = _user?.uid;
+
+    if (textValue.isEmpty || uid == null) return;
+
+    final name = _user?.displayName?.trim();
+    final displayName =
+        name == null || name.isEmpty ? 'Viewsta User' : name;
+
+    try {
+      await _firestoreService.addVoiceComment(
+        post.id,
+        uid,
+        displayName,
+        textValue,
+      );
+
+      controller.clear();
+
+      if (mounted) {
+        setSheetState(() {});
+        setState(() {});
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to send voice right now.'),
+          ),
+        );
       }
     }
   }

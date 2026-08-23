@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
+import '../../models/post_model.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -97,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                     right: 2,
                     bottom: 100,
                   ),
-                  sliver: _postGrid(),
+                  sliver: _postGrid(user.uid),
                 ),
               ],
             ),
@@ -213,15 +214,24 @@ class ProfileScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
-        children: const [
+        children: [
           Expanded(
-            child: _Stat(value: '0', label: 'Posts'),
+            child: _Stat(
+              value: postsCount.toString(),
+              label: 'Posts',
+            ),
           ),
           Expanded(
-            child: _Stat(value: '0', label: 'Supporters'),
+            child: _Stat(
+              value: followersCount.toString(),
+              label: 'Supporters',
+            ),
           ),
           Expanded(
-            child: _Stat(value: '0', label: 'Supporting'),
+            child: _Stat(
+              value: followingCount.toString(),
+              label: 'Supporting',
+            ),
           ),
         ],
       ),
@@ -423,25 +433,98 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _postGrid() {
-    return SliverGrid(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        return Container(
-          color: _card,
-          child: const Icon(
-            Icons.image_outlined,
-            color: Color(0xFF55555F),
-            size: 30,
+  Widget _postGrid(String uid) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(30),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: _purple,
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(30),
+              child: Center(
+                child: Text(
+                  'Unable to load posts.',
+                  style: TextStyle(color: _muted),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final posts = snapshot.data?.docs
+                .map((doc) => PostModel.fromMap(doc.id, doc.data()))
+                .where((post) => post.userId == uid)
+                .toList() ??
+            [];
+
+        if (posts.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 45),
+              child: Center(
+                child: Text(
+                  'No posts yet',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return SliverGrid(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final post = posts[index];
+
+              if (post.imageUrl.isNotEmpty) {
+                return Image.network(
+                  post.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: _card,
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      color: Color(0xFF55555F),
+                      size: 30,
+                    ),
+                  ),
+                );
+              }
+
+              return Container(
+                color: _card,
+                child: const Icon(
+                  Icons.movie_outlined,
+                  color: Color(0xFF55555F),
+                  size: 30,
+                ),
+              );
+            },
+            childCount: posts.length,
+          ),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 2,
+            mainAxisSpacing: 2,
           ),
         );
-      }, childCount: 9),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
-      ),
+      },
     );
   }
+
 }
 
 class _Stat extends StatelessWidget {
