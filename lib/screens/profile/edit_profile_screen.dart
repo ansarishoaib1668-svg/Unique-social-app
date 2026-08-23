@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import '../../services/cloudinary_service.dart';
+import '../create/edit_photo_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -394,35 +394,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (picked == null || !mounted) return;
 
-      final cropped = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: "Crop Profile Photo",
-            toolbarColor: purple,
-            toolbarWidgetColor: Colors.white,
-            lockAspectRatio: true,
+      final editedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EditPhotoScreen(
+            imageFile: File(picked.path),
           ),
-          IOSUiSettings(
-            title: "Crop Profile Photo",
-            aspectRatioLockEnabled: true,
-          ),
-        ],
+        ),
       );
 
-      if (cropped == null || !mounted) return;
-
-      final file = File(cropped.path);
+      if (editedFile == null || !mounted) return;
 
       setState(() {
-        _selectedPhoto = file;
+        _selectedPhoto = editedFile;
         _uploadingPhoto = true;
         _uploadProgress = 0.0;
       });
 
       final url = await CloudinaryService.uploadFile(
-        file,
+        editedFile,
         onProgress: (progress) {
           if (mounted) {
             setState(() {
@@ -443,11 +433,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _showMessage("Photo uploaded successfully.");
     } catch (e) {
       if (mounted) {
-        setState(() => _uploadingPhoto = false);
-        _showMessage("Unable to crop or upload photo.");
+        setState(() {
+          _uploadingPhoto = false;
+          _uploadProgress = 0.0;
+        });
+        _showMessage("Unable to select or upload photo.");
       }
     }
   }
+
   Widget _profilePhoto() {
     return Center(
       child: Column(
