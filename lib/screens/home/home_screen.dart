@@ -1,12 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
 import '../moments/moments_screen.dart';
-import '../story/story_upload_screen.dart';
 import '../profile/profile_screen.dart';
+import '../story/story_upload_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,47 +16,43 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _streamTab = 0;
-  final FirestoreService _firestoreService = FirestoreService();
-  final Map<String, bool> _glowStates = {};
-  final Map<String, int> _localGlowCounts = {};
-  final Set<String> _glowLoading = {};
-
   static const purple = Color(0xFF7C3AED);
-  static const background = Color(0xFF000000);
-  static const card = Color(0xFF060608);
-  static const border = Color(0xFF25252A);
-  static const text = Color(0xFFFFFFFF);
-  static const muted = Color(0xFFA2A2AB);
+  static const blue = Color(0xFF38BDF8);
+  static const text = Color(0xFF111114);
+  static const muted = Color(0xFF777781);
+  static const border = Color(0xFFE8E8EE);
+
+  final _firestore = FirestoreService();
+  final Map<String, bool> _supported = {};
+  final Map<String, bool> _liked = {};
+  final Map<String, bool> _saved = {};
+  final Map<String, int> _localLikes = {};
+  int _tab = 0;
 
   User? get _user => FirebaseAuth.instance.currentUser;
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             _header(),
             Expanded(
-              child: ColoredBox(
-                color: background,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                  SliverToBoxAdapter(child: _streamTabs()),
-                  SliverToBoxAdapter(child: _moments()),
-                  const SliverToBoxAdapter(child: SizedBox(height: 10)),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _tabs()),
+                  SliverToBoxAdapter(child: _stories()),
                   StreamBuilder<List<PostModel>>(
-                    stream: _firestoreService.getPosts(),
+                    stream: _firestore.getPosts(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 180,
+                            height: 220,
                             child: Center(
                               child: CircularProgressIndicator(
                                 color: purple,
@@ -66,50 +62,43 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       }
-
                       if (snapshot.hasError) {
-                        return SliverToBoxAdapter(
+                        return const SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 180,
+                            height: 220,
                             child: Center(
-                              child: _message(
-                                Icons.cloud_off_rounded,
-                                'Unable to load posts right now.',
+                              child: Text(
+                                'Unable to load posts',
+                                style: TextStyle(color: muted),
                               ),
                             ),
                           ),
                         );
                       }
-
                       final posts = snapshot.data ?? <PostModel>[];
-
                       if (posts.isEmpty) {
-                        return SliverToBoxAdapter(
+                        return const SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 180,
+                            height: 220,
                             child: Center(
-                              child: _message(
-                                Icons.photo_library_outlined,
-                                'No posts yet.',
+                              child: Text(
+                                'No posts yet',
+                                style: TextStyle(color: muted),
                               ),
                             ),
                           ),
                         );
                       }
-
                       return SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                            child: _postCard(posts[index]),
-                          );
-                        }, childCount: posts.length),
+                        delegate: SliverChildBuilderDelegate(
+                          (_, index) => _postCard(posts[index]),
+                          childCount: posts.length,
+                        ),
                       );
                     },
                   ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 92)),
-                  ],
-                ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                ],
               ),
             ),
           ],
@@ -120,497 +109,433 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 10, 28, 7),
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: border, width: .7)),
+      ),
       child: Row(
         children: [
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StoryUploadScreen()),
+            ),
+            icon: const Icon(Icons.add_rounded, color: text, size: 30),
+          ),
+          const Spacer(),
           const Text(
-            'viewsta',
+            'Viewsta',
             style: TextStyle(
               color: purple,
-              fontSize: 31,
+              fontSize: 30,
               fontWeight: FontWeight.w800,
-              letterSpacing: -1.1,
+              letterSpacing: -1.4,
             ),
           ),
           const Spacer(),
           Stack(
             clipBehavior: Clip.none,
             children: [
-              const Icon(
-                Icons.notifications_none_rounded,
-                color: text,
-                size: 28,
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: text,
+                  size: 29,
+                ),
               ),
               Positioned(
-                right: -1,
-                top: 1,
+                right: 8,
+                top: 7,
                 child: Container(
                   width: 7,
                   height: 7,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFF3B5C),
+                    color: purple,
                     shape: BoxShape.circle,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 16),
         ],
       ),
     );
   }
 
-  Widget _streamTabs() {
-    const tabs = ['For You', 'Following', 'Fresh'];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 4, 30, 4),
+  Widget _tabs() {
+    const labels = ['For You', 'Supporting', 'Fresh'];
+    return Container(
+      height: 51,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: border, width: .7)),
+      ),
       child: Row(
-        children: [
-          for (int i = 0; i < tabs.length; i++) ...[
-            GestureDetector(
-              onTap: () => setState(() => _streamTab = i),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 7, bottom: 8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      tabs[i],
-                      style: TextStyle(
-                        color: _streamTab == i ? text : const Color(0xFFD1D1D7),
-                        fontSize: 15,
-                        fontWeight: _streamTab == i
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
+        children: List.generate(
+          labels.length,
+          (i) => Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _tab = i),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    labels[i],
+                    style: TextStyle(
+                      color: _tab == i ? text : muted,
+                      fontSize: 14,
+                      fontWeight:
+                          _tab == i ? FontWeight.w700 : FontWeight.w500,
                     ),
-                    const SizedBox(height: 8),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: _streamTab == i ? 66 : 0,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: purple,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: _tab == i ? 62 : 0,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: purple,
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            if (i != tabs.length - 1) const SizedBox(width: 38),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _moments() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(color: Color(0xFF1D1D22), height: 1),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(30, 13, 30, 7),
-          child: Row(
-            children: [
-              const Text(
-                'Moments',
-                style: TextStyle(
-                  color: text,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MomentsScreen()),
-                  );
-                },
-                child: const Text(
-                  'View all',
-                  style: TextStyle(
-                    color: purple,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+  Widget _stories() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('stories').snapshots(),
+      builder: (context, snapshot) {
+        final now = DateTime.now();
+        final docs = (snapshot.data?.docs ?? []).where((doc) {
+          final created = doc.data()['createdAt'];
+          if (created is Timestamp) {
+            return now.difference(created.toDate()).inHours < 24;
+          }
+          return true;
+        }).toList();
+
+        if (docs.isEmpty) return const SizedBox(height: 12);
+
+        final ids = <String>[];
+        for (final doc in docs) {
+          final id = doc.data()['userId'];
+          if (id is String && id.isNotEmpty && !ids.contains(id)) {
+            ids.add(id);
+          }
+        }
+
+        return Container(
+          height: 112,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: border, width: .7)),
           ),
-        ),
-        SizedBox(
-          height: 104,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: 6,
-            separatorBuilder: (context, index) => const SizedBox(width: 14),
-            itemBuilder: (context, index) => _moment(isOwn: index == 0),
+            itemCount: ids.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (_, index) => _storyItem(ids[index]),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _moment({required bool isOwn}) {
-    return GestureDetector(
-      onTap: () {
-        if (isOwn) {
-          Navigator.push(
+  Widget _storyItem(String uid) {
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance.collection('users').doc(uid).get(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? {};
+        final username = data['username'] is String &&
+                (data['username'] as String).trim().isNotEmpty
+            ? (data['username'] as String).trim()
+            : 'User';
+        final photo = data['photoUrl'] is String &&
+                (data['photoUrl'] as String).trim().isNotEmpty
+            ? (data['photoUrl'] as String).trim()
+            : null;
+
+        return GestureDetector(
+          onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MomentsScreen()),
-          );
-        }
-      },
-      child: SizedBox(
-        width: 76,
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
+          ),
+          child: SizedBox(
+            width: 72,
+            child: Column(
               children: [
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 68,
+                  height: 68,
                   padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [purple, Color(0xFFDA3DFF), Color(0xFF38BDF8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: LinearGradient(colors: [purple, blue]),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.all(3),
+                    padding: const EdgeInsets.all(2.5),
                     decoration: const BoxDecoration(
-                      color: background,
+                      color: Colors.white,
                       shape: BoxShape.circle,
                     ),
                     child: CircleAvatar(
-                      backgroundColor: const Color(0xFF111116),
-                      backgroundImage: isOwn && _user?.photoURL != null
-                          ? NetworkImage(_user!.photoURL!)
-                          : null,
-                      child: isOwn && _user?.photoURL != null
-                          ? null
-                          : const Icon(
+                      backgroundColor: const Color(0xFFF1F1F5),
+                      backgroundImage:
+                          photo == null ? null : NetworkImage(photo),
+                      child: photo == null
+                          ? const Icon(
                               Icons.person_outline_rounded,
-                              color: Color(0xFF777781),
-                              size: 28,
-                            ),
+                              color: muted,
+                            )
+                          : null,
                     ),
                   ),
                 ),
-                if (isOwn)
-                  Positioned(
-                    right: -1,
-                    bottom: -1,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const StoryUploadScreen(),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 25,
-                        height: 25,
-                        decoration: const BoxDecoration(
-                          color: purple,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.add_rounded,
-                          color: text,
-                          size: 19,
-                        ),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  '@$username',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: text, fontSize: 10.5),
+                ),
               ],
             ),
-            const SizedBox(height: 5),
-            Text(
-              isOwn ? 'Your Moment' : '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: text, fontSize: 11),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _postCard(PostModel post) {
-    final hasImage = post.imageUrl.trim().isNotEmpty;
+    final image = post.imageUrl.trim();
     final caption = post.text.trim();
-    final comments = post.comments.length;
+    final likes = _localLikes[post.id] ?? post.likes;
+    final liked = _liked[post.id] ?? false;
+    final saved = _saved[post.id] ?? false;
+    final isOwn = post.userId == _user?.uid;
 
     return Container(
-      clipBehavior: Clip.antiAlias,
-      color: background,
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _postHeader(post),
-
-          if (hasImage)
+          _postHeader(post, isOwn),
+          if (image.isNotEmpty)
             AspectRatio(
               aspectRatio: 4 / 5,
               child: Image.network(
-                post.imageUrl.trim(),
+                image,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-
-                  return Container(
-                    color: const Color(0xFF060608),
-                    alignment: Alignment.center,
-                    child: const SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: CircularProgressIndicator(
-                        color: purple,
-                        strokeWidth: 2,
+                loadingBuilder: (_, child, progress) => progress == null
+                    ? child
+                    : const Center(
+                        child: CircularProgressIndicator(
+                          color: purple,
+                          strokeWidth: 2,
+                        ),
                       ),
+                errorBuilder: (_, __, ___) => Container(
+                  color: const Color(0xFFF3F3F7),
+                  child: const Center(
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: muted,
+                      size: 42,
                     ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: const Color(0xFF060608),
-                    alignment: Alignment.center,
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.broken_image_outlined,
-                          color: muted,
-                          size: 38,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Image unavailable',
-                          style: TextStyle(
-                            color: muted,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                  ),
+                ),
+              ),
+            )
+          else if (post.videoUrl.trim().isNotEmpty)
+            Container(
+              height: 280,
+              color: const Color(0xFFF3F3F7),
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_outline_rounded,
+                  color: text,
+                  size: 52,
+                ),
               ),
             )
           else if (caption.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              padding: const EdgeInsets.all(18),
               child: Text(
                 caption,
                 style: const TextStyle(
                   color: text,
-                  fontSize: 15,
+                  fontSize: 16,
                   height: 1.45,
                 ),
               ),
-            )
-          else
-            _mediaFallback(),
-
-          _actions(post),
-
-          if (caption.isNotEmpty && hasImage)
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 12, 5),
+            child: Row(
+              children: [
+                _postIcon(
+                  liked ? Icons.favorite : Icons.favorite_border,
+                  liked ? const Color(0xFFFF3B5C) : text,
+                  likes > 0 ? _compact(likes) : '',
+                  () => _toggleLike(post),
+                ),
+                _postIcon(
+                  Icons.chat_bubble_outline_rounded,
+                  text,
+                  post.comments.isNotEmpty
+                      ? _compact(post.comments.length)
+                      : '',
+                  () => _comment(post),
+                ),
+                _postIcon(
+                  Icons.send_outlined,
+                  text,
+                  '',
+                  () => _pass(post),
+                ),
+                const Spacer(),
+                _postIcon(
+                  saved ? Icons.bookmark : Icons.bookmark_border,
+                  text,
+                  '',
+                  () => _toggleSave(post),
+                ),
+              ],
+            ),
+          ),
+          if (caption.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    const TextSpan(
-                      text: '@username ',
-                      style: TextStyle(
-                        color: text,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    TextSpan(
-                      text: caption,
-                      style: const TextStyle(
-                        color: text,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 7),
+              child: Text(
+                caption,
+                style: const TextStyle(
+                  color: text,
+                  fontSize: 13,
+                  height: 1.4,
                 ),
               ),
             ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
             child: Text(
-              comments == 0
-                  ? 'View all comments'
-                  : 'View all $comments comments',
-              style: const TextStyle(
-                color: muted,
-                fontSize: 12,
-              ),
+              'View ${_compact(likes)}  ·  ${post.comments.isEmpty ? 'View all comments' : 'View all ${post.comments.length} comments'}',
+              style: const TextStyle(color: muted, fontSize: 12),
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: Text(
               _postTime(post.createdAt),
-              style: const TextStyle(
-                color: muted,
-                fontSize: 10,
-              ),
+              style: const TextStyle(color: muted, fontSize: 10),
             ),
           ),
+          const Divider(height: 1, color: border),
         ],
       ),
     );
   }
 
-  String _postTime(DateTime? time) {
-    if (time == null) return 'Just now';
-
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inSeconds < 60) {
-      return 'Just now';
-    }
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    }
-
-    if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    }
-
-    if (difference.inDays == 1) {
-      return 'Yesterday';
-    }
-
-    if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    }
-
-    return '${time.day}/${time.month}/${time.year}';
-  }
-
-  Widget _postHeader(PostModel post) {
+  Widget _postHeader(PostModel post, bool isOwn) {
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: FirebaseFirestore.instance
-          .collection('users')
-          .doc(post.userId)
-          .get(),
+      future: post.userId.isEmpty
+          ? null
+          : FirebaseFirestore.instance
+              .collection('users')
+              .doc(post.userId)
+              .get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
-
-        final displayName =
-            data['displayName'] is String &&
-                    (data['displayName'] as String).trim().isNotEmpty
-                ? (data['displayName'] as String).trim()
-                : 'Viewsta User';
-
-        final username =
-            data['username'] is String &&
-                    (data['username'] as String).trim().isNotEmpty
-                ? (data['username'] as String).trim()
-                : 'username';
-
-        final photoUrl =
-            data['photoUrl'] is String &&
-                    (data['photoUrl'] as String).trim().isNotEmpty
-                ? (data['photoUrl'] as String).trim()
-                : null;
+        final username = data['username'] is String &&
+                (data['username'] as String).trim().isNotEmpty
+            ? (data['username'] as String).trim()
+            : 'viewsta_user';
+        final photo = data['photoUrl'] is String &&
+                (data['photoUrl'] as String).trim().isNotEmpty
+            ? (data['photoUrl'] as String).trim()
+            : null;
+        final supported = _supported[post.userId] ?? false;
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
+          padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 21,
-                backgroundColor: const Color(0xFF111116),
+                backgroundColor: const Color(0xFFF0F0F4),
                 backgroundImage:
-                    photoUrl != null ? NetworkImage(photoUrl) : null,
-                child: photoUrl == null
+                    photo == null ? null : NetworkImage(photo),
+                child: photo == null
                     ? const Icon(
                         Icons.person_outline_rounded,
-                        color: Color(0xFF8E8E98),
-                        size: 22,
+                        color: muted,
                       )
                     : null,
               ),
               const SizedBox(width: 10),
-
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '@$username',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: text,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: muted,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '@$username',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: text,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-
+              if (!isOwn)
+                OutlinedButton(
+                  onPressed: _user == null
+                      ? null
+                      : () => _toggleSupport(post.userId),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: supported ? purple : text,
+                    side: BorderSide(
+                      color: supported ? purple : text,
+                      width: 1,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    supported ? 'Supporting' : 'Support',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               IconButton(
                 onPressed: () {},
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
-                ),
+                constraints: const BoxConstraints(minWidth: 36),
                 icon: const Icon(
-                  Icons.more_horiz_rounded,
+                  Icons.more_vert_rounded,
                   color: text,
-                  size: 22,
+                  size: 23,
                 ),
               ),
             ],
@@ -620,468 +545,226 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _actions(PostModel post) {
-    final glowed = _glowStates[post.id] ?? false;
-    final loading = _glowLoading.contains(post.id);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-      child: Row(
-        children: [
-          _action(
-            glowed
-                ? Icons.favorite_rounded
-                : Icons.favorite_border_rounded,
-            '${_localGlowCounts[post.id] ?? post.likes}',
-            'Glow',
-            loading ? () {} : () => _toggleGlow(post),
-            iconColor: glowed
-                ? const Color(0xFFFF3B5C)
-                : text,
-          ),
-          _action(
-            Icons.chat_bubble_outline_rounded,
-            '${post.comments.length}',
-            'Voice',
-            () => _openComments(post),
-          ),
-          _action(
-            Icons.graphic_eq_rounded,
-            '0',
-            'Pass',
-            () {},
-          ),
-          _action(
-            Icons.bookmark_border_rounded,
-            '',
-            'Vault',
-            () {},
-          ),
-          _action(
-            Icons.auto_awesome_rounded,
-            '',
-            'Vibe',
-            () {},
-          ),
-        ],
+  Widget _postIcon(
+    IconData icon,
+    Color color,
+    String count,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 27),
+            if (count.isNotEmpty) ...[
+              const SizedBox(width: 4),
+              Text(
+                count,
+                style: const TextStyle(
+                  color: text,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> _toggleGlow(PostModel post) async {
-    final uid = _user?.uid;
+  Future<void> _toggleSupport(String uid) async {
+    final me = _user?.uid;
+    if (me == null || uid.isEmpty || me == uid) return;
+    final next = !(_supported[uid] ?? false);
+    setState(() => _supported[uid] = next);
 
-    if (uid == null || _glowLoading.contains(post.id)) return;
-
-    final current = _glowStates[post.id] ?? false;
-    final next = !current;
-
-    final oldCount = _localGlowCounts[post.id] ?? post.likes;
-    final newCount = next ? oldCount + 1 : oldCount - 1;
-
-    setState(() {
-      _glowStates[post.id] = next;
-      _localGlowCounts[post.id] = newCount;
-      _glowLoading.add(post.id);
-    });
+    final mine = FirebaseFirestore.instance
+        .collection('users')
+        .doc(me)
+        .collection('supporting')
+        .doc(uid);
+    final theirs = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('supporters')
+        .doc(me);
 
     try {
-      await _firestoreService.setGlow(post.id, uid, next);
-    } catch (e) {
-      if (!mounted) return;
+      if (next) {
+        await mine.set({'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
+        await theirs.set({'uid': me, 'createdAt': FieldValue.serverTimestamp()});
+      } else {
+        await mine.delete();
+        await theirs.delete();
+      }
+    } catch (_) {
+      if (mounted) setState(() => _supported[uid] = !next);
+    }
+  }
 
-      setState(() {
-        _glowStates[post.id] = current;
-        _localGlowCounts[post.id] = oldCount;
-      });
-    } finally {
+  Future<void> _toggleLike(PostModel post) async {
+    final uid = _user?.uid;
+    if (uid == null) return;
+    final next = !(_liked[post.id] ?? false);
+    setState(() {
+      _liked[post.id] = next;
+      _localLikes[post.id] =
+          (post.likes + (next ? 1 : -1)).clamp(0, 1 << 30);
+    });
+    try {
+      await _firestore.setGlow(post.id, uid, next);
+    } catch (_) {
       if (mounted) {
         setState(() {
-          _glowLoading.remove(post.id);
+          _liked[post.id] = !next;
+          _localLikes[post.id] = post.likes;
         });
       }
     }
   }
 
-  void _openComments(PostModel post) {
-    final controller = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.72,
-              minChildSize: 0.45,
-              maxChildSize: 0.94,
-              expand: false,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF101014),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      Container(
-                        width: 42,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF55555F),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Voice',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(
-                        color: Color(0xFF292930),
-                        height: 1,
-                      ),
-                      Expanded(
-                        child: post.comments.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'No voices yet.\nBe the first to say something.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFFA2A2AB),
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              )
-                            : ListView.builder(
-                                controller: scrollController,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                itemCount: post.comments.length,
-                                itemBuilder: (context, index) {
-                                  final comment = post.comments[index];
-
-                                  return Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      16,
-                                      9,
-                                      16,
-                                      9,
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Color(0xFF25252D),
-                                          child: Icon(
-                                            Icons.person_outline_rounded,
-                                            color: Colors.white70,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                '@username',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                comment,
-                                                style: const TextStyle(
-                                                  color: Colors.white70,
-                                                  fontSize: 13,
-                                                  height: 1.35,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      SafeArea(
-                        top: false,
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            12,
-                            8,
-                            12,
-                            10 + MediaQuery.of(context).viewInsets.bottom,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: controller,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                  textInputAction: TextInputAction.send,
-                                  onSubmitted: (_) async {
-                                    await _sendVoiceComment(
-                                      post,
-                                      controller,
-                                      setSheetState,
-                                    );
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: 'Add a voice...',
-                                    hintStyle: const TextStyle(
-                                      color: Color(0xFF777780),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFF1B1B21),
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(22),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () async {
-                                  await _sendVoiceComment(
-                                    post,
-                                    controller,
-                                    setSheetState,
-                                  );
-                                },
-                                child: Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: const BoxDecoration(
-                                    color: purple,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.send_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    ).whenComplete(controller.dispose);
-  }
-
-  Future<void> _sendVoiceComment(
-    PostModel post,
-    TextEditingController controller,
-    StateSetter setSheetState,
-  ) async {
-    final textValue = controller.text.trim();
+  Future<void> _toggleSave(PostModel post) async {
     final uid = _user?.uid;
-
-    if (textValue.isEmpty || uid == null) return;
-
-    final name = _user?.displayName?.trim();
-    final displayName =
-        name == null || name.isEmpty ? 'Viewsta User' : name;
-
+    if (uid == null) return;
+    final next = !(_saved[post.id] ?? false);
+    setState(() => _saved[post.id] = next);
     try {
-      await _firestoreService.addVoiceComment(
-        post.id,
-        uid,
-        displayName,
-        textValue,
-      );
-
-      controller.clear();
-
-      if (mounted) {
-        setSheetState(() {});
-        setState(() {});
-      }
+      await _firestore.setVault(post.id, uid, next);
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to send voice right now.'),
-          ),
-        );
-      }
+      if (mounted) setState(() => _saved[post.id] = !next);
     }
   }
 
-  Widget _action(
+  Future<void> _pass(PostModel post) async {
+    final uid = _user?.uid;
+    if (uid == null) return;
+    try {
+      await _firestore.recordPass(post.id, uid);
+    } catch (_) {}
+  }
+
+  Future<void> _comment(PostModel post) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Add comment'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Write something...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Post'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    final uid = _user?.uid;
+    final comment = result?.trim();
+    if (uid == null || comment == null || comment.isEmpty) return;
+
+    try {
+      await _firestore.addVoiceComment(
+        post.id,
+        uid,
+        _user?.displayName?.trim().isNotEmpty == true
+            ? _user!.displayName!.trim()
+            : 'Viewsta User',
+        comment,
+      );
+    } catch (_) {}
+  }
+
+  Widget _bottomNavigation() => Container(
+        height: 72,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: border, width: .8)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _nav(Icons.home_filled, 'Home', true, null),
+            _nav(Icons.ondemand_video_outlined, 'Reels', false, null),
+            _nav(Icons.chat_bubble_outline_rounded, 'Chat', false, null),
+            _nav(Icons.search_rounded, 'Explore', false, null),
+            _nav(
+              Icons.person_outline_rounded,
+              'Profile',
+              false,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _nav(
     IconData icon,
-    String count,
     String label,
-    VoidCallback onTap, {
-    Color iconColor = text,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    bool active,
+    VoidCallback? onTap,
+  ) =>
+      InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1),
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          width: 64,
+          height: 64,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: iconColor, size: 25),
-                  if (count.isNotEmpty) ...[
-                    const SizedBox(width: 3),
-                    Text(
-                      count,
-                      style: const TextStyle(
-                        color: text,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
+              Icon(
+                icon,
+                color: active ? purple : text,
+                size: 28,
               ),
               const SizedBox(height: 3),
               Text(
                 label,
-                style: const TextStyle(
-                  color: text,
+                style: TextStyle(
+                  color: active ? purple : text,
                   fontSize: 10,
-                  fontWeight: FontWeight.w500,
+                  fontWeight:
+                      active ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _mediaFallback() {
-    return Container(
-      width: double.infinity,
-      height: 280,
-      color: const Color(0xFF0D0D11),
-      child: const Center(
-        child: Icon(Icons.image_outlined, color: Color(0xFF5B5B66), size: 38),
-      ),
-    );
-  }
+  String _compact(int n) => n >= 1000000
+      ? '${(n / 1000000).toStringAsFixed(1)}M'
+      : n >= 1000
+          ? '${(n / 1000).toStringAsFixed(1)}K'
+          : '$n';
 
-  Widget _message(IconData icon, String message) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: card,
-        border: Border.all(color: border),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: purple, size: 28),
-          const SizedBox(height: 9),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: muted, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _bottomNavigation() {
-    return SafeArea(
-      top: false,
-      child: Container(
-        height: 72,
-        decoration: const BoxDecoration(
-          color: background,
-          border: Border(top: BorderSide(color: Color(0xFF202026))),
-        ),
-        child: Row(
-          children: [
-            _navItem(Icons.home_filled, 'Home', true),
-            _navItem(Icons.explore_outlined, 'Explore', false),
-            Expanded(
-              child: Center(
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: purple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add_rounded, color: text, size: 34),
-                ),
-              ),
-            ),
-            _navItem(Icons.chat_bubble_outline_rounded, 'Chat', false),
-            _navItem(Icons.person_outline_rounded, 'Profile', false, onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())); }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool selected, {VoidCallback? onTap}) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: selected ? purple : text, size: 24),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              color: selected ? purple : text,
-              fontSize: 10,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-      ),
-    );
+  String _postTime(DateTime? time) {
+    if (time == null) return 'Just now';
+    final d = DateTime.now().difference(time);
+    if (d.inSeconds < 60) return 'Just now';
+    if (d.inMinutes < 60) return '${d.inMinutes}m ago';
+    if (d.inHours < 24) return '${d.inHours}h ago';
+    if (d.inDays == 1) return 'Yesterday';
+    if (d.inDays < 7) return '${d.inDays}d ago';
+    return '${time.day}/${time.month}/${time.year}';
   }
 }
