@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
 import '../moments/moments_screen.dart';
+import '../chat/chat_screen.dart';
 import '../profile/profile_screen.dart';
 import '../story/story_upload_screen.dart';
 
@@ -244,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
             scrollDirection: Axis.horizontal,
             itemCount: ids.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (_, index) => _storyItem(ids[index]),
           ),
         );
@@ -348,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           strokeWidth: 2,
                         ),
                       ),
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   color: const Color(0xFFF3F3F7),
                   child: const Center(
                     child: Icon(
@@ -553,20 +554,26 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(30),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 27),
+            Icon(
+              icon,
+              color: color,
+              size: 30,
+              weight: 1.8,
+            ),
             if (count.isNotEmpty) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               Text(
                 count,
                 style: const TextStyle(
                   color: text,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -688,68 +695,91 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
-  Widget _bottomNavigation() => Container(
-        height: 72,
+  Widget _bottomNavigation() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 82,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: border, width: .8)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(28),
+          ),
+          border: Border(
+            top: BorderSide(
+              color: Color(0xFFE8E8EE),
+              width: 0.8,
+            ),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _nav(Icons.home_filled, 'Home', true, null),
-            _nav(Icons.ondemand_video_outlined, 'Reels', false, null),
-            _nav(Icons.chat_bubble_outline_rounded, 'Chat', false, null),
-            _nav(Icons.search_rounded, 'Explore', false, null),
-            _nav(
-              Icons.person_outline_rounded,
-              'Profile',
-              false,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProfileScreen(),
-                ),
-              ),
-            ),
+            _navIcon(Icons.home_outlined, 0),
+            _navIcon(Icons.ondemand_video_outlined, 1),
+            _navIcon(Icons.chat_bubble_outline_rounded, 2),
+            _navIcon(Icons.search_rounded, 3),
+            _navIcon(Icons.person_outline_rounded, 4),
           ],
         ),
-      );
+      ),
+    );
+  }
 
-  Widget _nav(
-    IconData icon,
-    String label,
-    bool active,
-    VoidCallback? onTap,
-  ) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+  Widget _navIcon(IconData icon, int index) {
+    final active = _tab == index;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() => _tab = index);
+
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ChatScreen(),
+              ),
+            );
+          } else if (index == 4) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(),
+              ),
+            );
+          }
+        },
         child: SizedBox(
-          width: 64,
-          height: 64,
+          height: 82,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                color: active ? purple : text,
-                size: 28,
+                color: active
+                    ? const Color(0xFF7C3AED)
+                    : Colors.black,
+                size: 32,
               ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  color: active ? purple : text,
-                  fontSize: 10,
-                  fontWeight:
-                      active ? FontWeight.w700 : FontWeight.w500,
+              const SizedBox(height: 5),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: active
+                      ? const Color(0xFF7C3AED)
+                      : Colors.transparent,
                 ),
               ),
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
 
   String _compact(int n) => n >= 1000000
       ? '${(n / 1000000).toStringAsFixed(1)}M'
