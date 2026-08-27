@@ -47,7 +47,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return FirebaseFirestore.instance
         .collection('chats')
         .where('participants', arrayContains: uid)
-        .orderBy('lastMessageAt', descending: true)
         .snapshots();
   }
 
