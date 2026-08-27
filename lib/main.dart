@@ -1,4 +1,5 @@
 import 'screens/splash_screen.dart';
+import 'services/presence_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -9,6 +10,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  PresenceService.instance.start();
 
   runApp(const ViewstaApp());
 }

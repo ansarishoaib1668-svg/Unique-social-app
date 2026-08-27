@@ -1354,6 +1354,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               (userData['photoUrl'] ?? '')
                                   .toString();
 
+                          final isOnline =
+                              userData['isOnline'] == true;
+
                           final lastMessage =
                               (chat['lastMessage'] ?? '')
                                   .toString()
@@ -1433,7 +1436,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     name,
                                     photoUrl,
                                     radius: 28,
-                                    active: false,
+                                    active: isOnline,
                                   ),
                                   const SizedBox(width: 13),
                                   Expanded(
