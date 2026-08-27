@@ -19,6 +19,9 @@ jobs:
           flutter-version: '3.44.7'
           channel: stable
 
+      - name: Check Flutter
+        run: flutter --version
+
       - name: Flutter pub get
         run: flutter pub get
 
