@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'signup_screen.dart';
 import 'home/home_screen.dart';
 
@@ -11,30 +13,86 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
+  final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool hidePassword = true;
   bool loading = false;
 
+  String normalizeUsername(String value) {
+    return value.trim().toLowerCase().replaceFirst(RegExp(r'^@'), '');
+  }
+
+  void showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Future<void> login() async {
-    final email = emailController.text.trim();
+    final username = normalizeUsername(usernameController.text);
     final password = passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter email and password'),
-        ),
-      );
+    if (username.isEmpty || password.isEmpty) {
+      showMessage('Please enter your username and password.');
+      return;
+    }
+
+    if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
+      showMessage('Please enter a valid username.');
       return;
     }
 
     setState(() => loading = true);
 
     try {
+      final usernameDoc = await FirebaseFirestore.instance
+          .collection('usernames')
+          .doc(username)
+          .get();
+
+      if (!usernameDoc.exists) {
+        showMessage('@$username was not found.');
+        return;
+      }
+
+      final data = usernameDoc.data();
+
+      if (data == null) {
+        showMessage('Could not find this account.');
+        return;
+      }
+
+      String? internalEmail = data['email'] as String?;
+
+      if (internalEmail == null || internalEmail.isEmpty) {
+        final uid = data['uid'] as String?;
+
+        if (uid != null && uid.isNotEmpty) {
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+
+          final userData = userDoc.data();
+
+          if (userData != null) {
+            internalEmail = userData['email'] as String?;
+          }
+        }
+      }
+
+      if (internalEmail == null || internalEmail.isEmpty) {
+        showMessage(
+          'This account needs to be updated before you can log in.',
+        );
+        return;
+      }
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
+        email: internalEmail,
         password: password,
       );
 
@@ -51,60 +109,24 @@ class _LoginScreenState extends State<LoginScreen> {
       String message = 'Login failed. Please try again.';
 
       if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
           e.code == 'invalid-credential') {
-        message = 'Incorrect email or password.';
-      } else if (e.code == 'wrong-password') {
-        message = 'Incorrect password.';
+        message = 'Incorrect username or password.';
       } else if (e.code == 'invalid-email') {
-        message = 'Please enter a valid email.';
+        message = 'This account has an invalid login setup.';
       } else if (e.code == 'network-request-failed') {
         message = 'Network error. Please try again.';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Too many attempts. Please try again later.';
       }
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      showMessage(message);
+    } catch (e) {
+      showMessage('Something went wrong. Please try again.');
     } finally {
       if (mounted) {
         setState(() => loading = false);
       }
-    }
-  }
-
-  Future<void> forgotPassword() async {
-    final email = emailController.text.trim();
-
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter your email first.'),
-        ),
-      );
-      return;
-    }
-
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: email,
-      );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent.'),
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message ?? 'Could not send reset email.'),
-        ),
-      );
     }
   }
 
@@ -121,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFF8B8B98),
+        color: Color(0xFF8B8B98),
         size: 21,
       ),
       suffixIcon: suffix,
@@ -147,48 +169,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget socialButton({
-    required Widget icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: SizedBox(
-        height: 52,
-        child: OutlinedButton(
-          onPressed: onTap,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF18181B),
-            side: const BorderSide(
-              color: Color(0xFFE9E5F2),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: EdgeInsets.zero,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
-    emailController.dispose();
+    usernameController.dispose();
     passwordController.dispose();
     super.dispose();
   }
@@ -203,7 +186,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Back button
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
@@ -217,7 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 8),
 
-              // Logo
               Center(
                 child: Container(
                   width: 96,
@@ -226,8 +207,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED)
-                            .withValues(alpha: 0.13),
+                        color: const Color(0xFF7C3AED).withValues(
+                          alpha: 0.13,
+                        ),
                         blurRadius: 26,
                         spreadRadius: 2,
                       ),
@@ -247,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Center(
                 child: Text(
-                  'VIESTA',
+                  'VIEWSTA',
                   style: TextStyle(
                     color: Color(0xFF18181B),
                     fontSize: 28,
@@ -293,13 +275,16 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
+                controller: usernameController,
+                keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
+                style: const TextStyle(
+                  color: Color(0xFF18181B),
+                ),
                 decoration: inputDecoration(
-                  hint: 'Email address',
-                  icon: Icons.mail_outline_rounded,
+                  hint: '@username',
+                  icon: Icons.alternate_email_rounded,
                 ),
               ),
 
@@ -309,9 +294,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: passwordController,
                 obscureText: hidePassword,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => loading ? null : login(),
+                onSubmitted: (_) {
+                  if (!loading) login();
+                },
+                style: const TextStyle(
+                  color: Color(0xFF18181B),
+                ),
                 decoration: inputDecoration(
-                  hint: 'Password',
+                  hint: 'Viewsta Password',
                   icon: Icons.lock_outline_rounded,
                   suffix: IconButton(
                     onPressed: () {
@@ -329,24 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 8),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: forgotPassword,
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Color(0xFF7C3AED),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
 
               SizedBox(
                 height: 56,
@@ -394,94 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 26),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Divider(color: Color(0xFFE5E1EB)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 13,
-                    ),
-                    child: Text(
-                      'OR CONTINUE WITH',
-                      style: TextStyle(
-                        color: Color(0xFFA1A1AA),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Divider(color: Color(0xFFE5E1EB)),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  socialButton(
-                    label: 'Google',
-                    icon: const Text(
-                      'G',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Google login will be connected next.',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  socialButton(
-                    label: 'Facebook',
-                    icon: const Icon(
-                      Icons.facebook_rounded,
-                      size: 20,
-                    ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Facebook login will be connected next.',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  socialButton(
-                    label: 'Apple',
-                    icon: const Icon(
-                      Icons.apple,
-                      size: 20,
-                    ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Apple login will be connected next.',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 26),
+              const SizedBox(height: 28),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

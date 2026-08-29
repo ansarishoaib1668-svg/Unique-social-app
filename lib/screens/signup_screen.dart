@@ -1,7 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../services/cloudinary_service.dart';
 import 'home/home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -12,67 +16,125 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final nameController = TextEditingController();
   final usernameController = TextEditingController();
-  final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  int step = 0;
   bool loading = false;
+  bool usernameChecking = false;
+  bool usernameAvailable = false;
   bool hidePassword = true;
   bool hideConfirmPassword = true;
+
+  File? profileImage;
 
   String normalizeUsername(String value) {
     return value.trim().toLowerCase().replaceFirst(RegExp(r'^@'), '');
   }
 
-  Future<void> createAccount() async {
-    final name = nameController.text.trim();
-    final username = normalizeUsername(usernameController.text);
-    final email = emailController.text.trim().toLowerCase();
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
+  void showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
-    if (name.isEmpty ||
-        username.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
-      return;
-    }
+  Future<void> checkUsername() async {
+    final username = normalizeUsername(usernameController.text);
 
     if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Username must be 3-20 characters using letters, numbers or _',
-          ),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          usernameAvailable = false;
+          usernameChecking = false;
+        });
+      }
       return;
     }
 
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
-      );
-      return;
+    setState(() => usernameChecking = true);
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('usernames')
+          .doc(username)
+          .get();
+
+      if (!mounted) return;
+
+      setState(() {
+        usernameAvailable = !doc.exists;
+        usernameChecking = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => usernameChecking = false);
+      showMessage('Could not check username. Please try again.');
     }
+  }
+
+  bool validateUsername() {
+    final username = normalizeUsername(usernameController.text);
+
+    if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
+      showMessage(
+        'Username must be 3-20 characters using letters, numbers or _',
+      );
+      return false;
+    }
+
+    if (!usernameAvailable) {
+      showMessage('Please choose an available username.');
+      return false;
+    }
+
+    return true;
+  }
+
+  bool validatePassword() {
+    final password = passwordController.text;
+    final confirm = confirmPasswordController.text;
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
-      return;
+      showMessage('Password must be at least 6 characters.');
+      return false;
     }
 
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+    if (password != confirm) {
+      showMessage('Passwords do not match.');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> pickProfilePicture() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1200,
+      );
+
+      if (image == null) return;
+
+      setState(() {
+        profileImage = File(image.path);
+      });
+    } catch (_) {
+      showMessage('Could not select the picture.');
+    }
+  }
+
+  Future<void> createAccount() async {
+    if (loading) return;
+
+    final username = normalizeUsername(usernameController.text);
+    final password = passwordController.text;
+
+    if (!validateUsername() || !validatePassword()) {
       return;
     }
 
@@ -82,11 +144,10 @@ class _SignupScreenState extends State<SignupScreen> {
     final usernameRef = firestore.collection('usernames').doc(username);
 
     try {
-      // Reserve username atomically.
       await firestore.runTransaction((transaction) async {
-        final usernameDoc = await transaction.get(usernameRef);
+        final existing = await transaction.get(usernameRef);
 
-        if (usernameDoc.exists) {
+        if (existing.exists) {
           throw Exception('USERNAME_TAKEN');
         }
 
@@ -96,86 +157,86 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       });
 
-      UserCredential userCredential;
+      final internalEmail = '$username@viewsta.app';
+
+      UserCredential credential;
 
       try {
-        userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+        credential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
+          email: internalEmail,
+          password: password,
+        );
       } catch (e) {
-        // If Firebase Auth fails, release the reserved username.
-        await usernameRef.delete();
+        try {
+          await usernameRef.delete();
+        } catch (_) {}
         rethrow;
       }
 
-      final user = userCredential.user;
+      final user = credential.user;
 
       if (user == null) {
         await usernameRef.delete();
         throw Exception('ACCOUNT_CREATION_FAILED');
       }
 
-      await user.updateDisplayName(name);
+      String? photoUrl;
+
+      if (profileImage != null) {
+        try {
+          photoUrl = await CloudinaryService.uploadFile(profileImage!);
+        } catch (_) {
+          await user.delete();
+          await usernameRef.delete();
+          throw Exception('PHOTO_UPLOAD_FAILED');
+        }
+      }
 
       await firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
-        'name': name,
         'username': username,
-        'email': email,
-        'photoUrl': null,
-        'bio': '',
-        'followersCount': 0,
-        'followingCount': 0,
-        'postsCount': 0,
+        'photoUrl': photoUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully 🎉')),
-      );
-
-      // Signup screen remove karke Home Feed open.
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(),
+        ),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
-      String message = 'Signup failed';
+      String message = 'Account could not be created.';
 
       if (e.code == 'email-already-in-use') {
-        message = 'This email is already registered';
-      } else if (e.code == 'invalid-email') {
-        message = 'Please enter a valid email';
+        message = 'This username is already registered.';
       } else if (e.code == 'weak-password') {
-        message = 'Password is too weak';
+        message = 'Password is too weak.';
       } else if (e.code == 'network-request-failed') {
-        message = 'Network error. Please try again';
+        message = 'Network error. Please try again.';
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      showMessage(message);
     } catch (e) {
       if (!mounted) return;
 
       final error = e.toString();
 
-      String message = 'Something went wrong. Please try again.';
-
       if (error.contains('USERNAME_TAKEN')) {
-        message =
-            '@$username is already taken. Please choose another username.';
+        showMessage('@$username is already taken.');
+      } else if (error.contains('PHOTO_UPLOAD_FAILED')) {
+        showMessage('Profile picture upload failed. Please try again.');
       } else if (error.contains('ACCOUNT_CREATION_FAILED')) {
-        message = 'Account could not be created. Please try again.';
+        showMessage('Account could not be created.');
+      } else {
+        showMessage('Something went wrong. Please try again.');
       }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(() => loading = false);
@@ -183,289 +244,444 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    usernameController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
-    super.dispose();
+  void nextStep() {
+    if (step == 0) {
+      if (!validateUsername()) return;
+      setState(() => step = 1);
+      return;
+    }
+
+    if (step == 1) {
+      if (!validatePassword()) return;
+      setState(() => step = 2);
+      return;
+    }
+
+    createAccount();
   }
 
-  InputDecoration _viewgramInput({
+  InputDecoration inputDecoration({
     required String hint,
     required IconData icon,
     Widget? suffix,
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF777783), fontSize: 14),
-      prefixIcon: Icon(icon, color: Color(0xFF8F8F9C), size: 21),
+      hintStyle: const TextStyle(
+        color: Color(0xFF9CA3AF),
+        fontSize: 15,
+      ),
+      prefixIcon: Icon(
+        icon,
+        color: const Color(0xFF8B8B98),
+      ),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFF181820),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+      fillColor: const Color(0xFFF8F7FC),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: 18,
+      ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(color: Color(0xFF292934)),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(
+          color: Color(0xFFE9E5F2),
+        ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.4),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(
+          color: Color(0xFF7C3AED),
+          width: 1.4,
+        ),
       ),
     );
+  }
+
+  Widget stepIndicator() {
+    return Row(
+      children: List.generate(
+        3,
+        (index) => Expanded(
+          child: Container(
+            height: 4,
+            margin: EdgeInsets.only(
+              right: index == 2 ? 0 : 6,
+            ),
+            decoration: BoxDecoration(
+              color: index <= step
+                  ? const Color(0xFF7C3AED)
+                  : const Color(0xFFE8E5EE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget usernameStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Create a username',
+          style: TextStyle(
+            color: Color(0xFF18181B),
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Choose a unique username for your Viewsta profile.',
+          style: TextStyle(
+            color: Color(0xFF71717A),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 28),
+        TextField(
+          controller: usernameController,
+          autocorrect: false,
+          textInputAction: TextInputAction.done,
+          onChanged: (_) => checkUsername(),
+          decoration: inputDecoration(
+            hint: '@username',
+            icon: Icons.alternate_email_rounded,
+            suffix: usernameChecking
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                : usernameAvailable
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF22C55E),
+                      )
+                    : null,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (usernameAvailable)
+          const Text(
+            '✓ Username is available',
+            style: TextStyle(
+              color: Color(0xFF16A34A),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        const SizedBox(height: 22),
+        const Text(
+          '3–20 characters • letters, numbers and _',
+          style: TextStyle(
+            color: Color(0xFFA1A1AA),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget passwordStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Create your Viewsta Password',
+          style: TextStyle(
+            color: Color(0xFF18181B),
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Keep your password private and easy for you to remember.',
+          style: TextStyle(
+            color: Color(0xFF71717A),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 28),
+        TextField(
+          controller: passwordController,
+          obscureText: hidePassword,
+          textInputAction: TextInputAction.next,
+          decoration: inputDecoration(
+            hint: 'Viewsta Password',
+            icon: Icons.lock_outline_rounded,
+            suffix: IconButton(
+              onPressed: () {
+                setState(() => hidePassword = !hidePassword);
+              },
+              icon: Icon(
+                hidePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: const Color(0xFF8B8B98),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: confirmPasswordController,
+          obscureText: hideConfirmPassword,
+          textInputAction: TextInputAction.done,
+          decoration: inputDecoration(
+            hint: 'Confirm Password',
+            icon: Icons.verified_user_outlined,
+            suffix: IconButton(
+              onPressed: () {
+                setState(
+                  () => hideConfirmPassword = !hideConfirmPassword,
+                );
+              },
+              icon: Icon(
+                hideConfirmPassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: const Color(0xFF8B8B98),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget profilePictureStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Add a profile picture',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF18181B),
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 9),
+        const Text(
+          'Add a profile picture to express your new profile.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF71717A),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 42),
+        Center(
+          child: GestureDetector(
+            onTap: pickProfilePicture,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF4F1FA),
+                border: Border.all(
+                  color: const Color(0xFFE3DDF0),
+                  width: 2,
+                ),
+              ),
+              child: ClipOval(
+                child: profileImage == null
+                    ? const Icon(
+                        Icons.person_outline_rounded,
+                        size: 64,
+                        color: Color(0xFFA1A1AA),
+                      )
+                    : Image.file(
+                        profileImage!,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: pickProfilePicture,
+            icon: const Icon(Icons.add_a_photo_outlined),
+            label: const Text('Add picture'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF7C3AED),
+              side: const BorderSide(
+                color: Color(0xFFDCD5EA),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 13,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: loading ? null : createAccount,
+          child: const Text(
+            'Skip for now',
+            style: TextStyle(
+              color: Color(0xFF71717A),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F12),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 28, 22, 30),
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top branding
-              Center(
-                child: Container(
-                  width: 74,
-                  height: 74,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFF38BDF8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: loading
+                        ? null
+                        : () {
+                            if (step > 0) {
+                              setState(() => step--);
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
                     ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x557C3AED),
-                        blurRadius: 24,
-                        spreadRadius: 2,
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'VIEWSTA',
+                    style: TextStyle(
+                      color: Color(0xFF18181B),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48),
+                ],
+              ),
+              const SizedBox(height: 16),
+              stepIndicator(),
+              const SizedBox(height: 42),
+              if (step == 0) usernameStep(),
+              if (step == 1) passwordStep(),
+              if (step == 2) profilePictureStep(),
+              if (step < 2) ...[
+                const SizedBox(height: 38),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: loading ? null : nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      disabledBackgroundColor: const Color(0xFFD8D3E5),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: Colors.white,
-                    size: 36,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'NEXT',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        SizedBox(width: 9),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              const Center(
-                child: Text(
-                  'Join Viewsta',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+              ] else ...[
+                const SizedBox(height: 26),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: loading ? null : createAccount,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      disabledBackgroundColor: const Color(0xFFD8D3E5),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: loading
+                        ? const SizedBox(
+                            width: 23,
+                            height: 23,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Text(
+                            'CREATE ACCOUNT',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                            ),
+                          ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 7),
-
+              ],
+              const SizedBox(height: 24),
               const Center(
                 child: Text(
                   'Your World. Your View.',
                   style: TextStyle(
                     color: Color(0xFFA1A1AA),
-                    fontSize: 14,
-                    letterSpacing: 0.3,
+                    fontSize: 12,
                   ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              const Text(
-                'Create your account',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-
-              const SizedBox(height: 7),
-
-              const Text(
-                'Set up your profile and start sharing your world.',
-                style: TextStyle(color: Color(0xFFA1A1AA), fontSize: 14),
-              ),
-
-              const SizedBox(height: 24),
-
-              TextField(
-                controller: nameController,
-                textInputAction: TextInputAction.next,
-                style: const TextStyle(color: Colors.white),
-                decoration: _viewgramInput(
-                  hint: 'Full name',
-                  icon: Icons.person_outline_rounded,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              TextField(
-                controller: usernameController,
-                textInputAction: TextInputAction.next,
-                autocorrect: false,
-                style: const TextStyle(color: Colors.white),
-                decoration: _viewgramInput(
-                  hint: 'Username',
-                  icon: Icons.alternate_email_rounded,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autocorrect: false,
-                style: const TextStyle(color: Colors.white),
-                decoration: _viewgramInput(
-                  hint: 'Email address',
-                  icon: Icons.mail_outline_rounded,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              TextField(
-                controller: passwordController,
-                obscureText: hidePassword,
-                textInputAction: TextInputAction.next,
-                style: const TextStyle(color: Colors.white),
-                decoration: _viewgramInput(
-                  hint: 'Password',
-                  icon: Icons.lock_outline_rounded,
-                  suffix: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        hidePassword = !hidePassword;
-                      });
-                    },
-                    icon: Icon(
-                      hidePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: const Color(0xFF8F8F9C),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: hideConfirmPassword,
-                textInputAction: TextInputAction.done,
-                style: const TextStyle(color: Colors.white),
-                decoration: _viewgramInput(
-                  hint: 'Confirm password',
-                  icon: Icons.verified_user_outlined,
-                  suffix: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        hideConfirmPassword = !hideConfirmPassword;
-                      });
-                    },
-                    icon: Icon(
-                      hideConfirmPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: const Color(0xFF8F8F9C),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: loading ? null : createAccount,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
-                    disabledBackgroundColor: const Color(0xFF3B3B45),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                  ),
-                  child: loading
-                      ? const SizedBox(
-                          width: 23,
-                          height: 23,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Create Account',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded, size: 20),
-                          ],
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Divider(color: Color(0xFF292934), thickness: 1),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      'VIEWSTA',
-                      style: TextStyle(
-                        color: Color(0xFF666673),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Divider(color: Color(0xFF292934), thickness: 1),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 18),
-
-              const Center(
-                child: Text(
-                  'Create your space. Share your view. ✦',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF777783), fontSize: 13),
                 ),
               ),
             ],
