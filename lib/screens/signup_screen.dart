@@ -141,58 +141,55 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => loading = true);
 
     final firestore = FirebaseFirestore.instance;
-    final usernameRef = firestore.collection('usernames').doc(username);
+    UserCredential? credential;
+    DocumentReference<Map<String, dynamic>>? usernameRef;
 
     try {
-      await firestore.runTransaction((transaction) async {
-        final existing = await transaction.get(usernameRef);
-
-        if (existing.exists) {
-          throw Exception('USERNAME_TAKEN');
-        }
-
-        transaction.set(usernameRef, {
-          'username': username,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      });
-
       final internalEmail = '$username@viewsta.app';
 
-      UserCredential credential;
-
-      try {
-        credential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
-          email: internalEmail,
-          password: password,
-        );
-      } catch (e) {
-        try {
-          await usernameRef.delete();
-        } catch (_) {}
-        rethrow;
-      }
+      // 1. Create Firebase Auth account first.
+      credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: internalEmail,
+        password: password,
+      );
 
       final user = credential.user;
 
       if (user == null) {
-        await usernameRef.delete();
         throw Exception('ACCOUNT_CREATION_FAILED');
       }
 
+      // 2. Reserve the username after Auth is signed in.
+      usernameRef = firestore.collection('usernames').doc(username);
+
+      final existing = await usernameRef.get();
+
+      if (existing.exists) {
+        await user.delete();
+        throw Exception('USERNAME_TAKEN');
+      }
+
+      await usernameRef.set({
+        'username': username,
+        'uid': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // 3. Upload profile picture if selected.
       String? photoUrl;
 
       if (profileImage != null) {
         try {
           photoUrl = await CloudinaryService.uploadFile(profileImage!);
         } catch (_) {
-          await user.delete();
           await usernameRef.delete();
+          await user.delete();
           throw Exception('PHOTO_UPLOAD_FAILED');
         }
       }
 
+      // 4. Create user profile.
       await firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'username': username,
