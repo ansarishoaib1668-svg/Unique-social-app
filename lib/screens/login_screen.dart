@@ -26,9 +26,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void showMessage(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> login() async {
@@ -58,38 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final data = usernameDoc.data();
-
-      if (data == null) {
-        showMessage('Could not find this account.');
-        return;
-      }
-
-      String? internalEmail = data['email'] as String?;
-
-      if (internalEmail == null || internalEmail.isEmpty) {
-        final uid = data['uid'] as String?;
-
-        if (uid != null && uid.isNotEmpty) {
-          final userDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .get();
-
-          final userData = userDoc.data();
-
-          if (userData != null) {
-            internalEmail = userData['email'] as String?;
-          }
-        }
-      }
-
-      if (internalEmail == null || internalEmail.isEmpty) {
-        showMessage(
-          'This account needs to be updated before you can log in.',
-        );
-        return;
-      }
+      // Firebase Auth uses username@viewsta.app internally.
+      final internalEmail = '$username@viewsta.app';
 
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: internalEmail,
@@ -100,9 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -137,34 +105,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(
-        color: Color(0xFF9CA3AF),
-        fontSize: 14,
-      ),
-      prefixIcon: Icon(
-        icon,
-        color: Color(0xFF8B8B98),
-        size: 21,
-      ),
+      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+      prefixIcon: Icon(icon, color: Color(0xFF8B8B98), size: 21),
       suffixIcon: suffix,
       filled: true,
       fillColor: const Color(0xFFF8F7FC),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 17,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(
-          color: Color(0xFFE9E5F2),
-        ),
+        borderSide: const BorderSide(color: Color(0xFFE9E5F2)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(
-          color: Color(0xFF7C3AED),
-          width: 1.4,
-        ),
+        borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.4),
       ),
     );
   }
@@ -190,10 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerLeft,
                 child: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    size: 20,
-                  ),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                 ),
               ),
 
@@ -207,9 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withValues(
-                          alpha: 0.13,
-                        ),
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.13),
                         blurRadius: 26,
                         spreadRadius: 2,
                       ),
@@ -244,10 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Center(
                 child: Text(
                   'Your World. Your View.',
-                  style: TextStyle(
-                    color: Color(0xFF71717A),
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Color(0xFF71717A), fontSize: 13),
                 ),
               ),
 
@@ -266,10 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Text(
                 'Log in to continue to your world.',
-                style: TextStyle(
-                  color: Color(0xFF71717A),
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Color(0xFF71717A), fontSize: 14),
               ),
 
               const SizedBox(height: 24),
@@ -279,9 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
-                style: const TextStyle(
-                  color: Color(0xFF18181B),
-                ),
+                style: const TextStyle(color: Color(0xFF18181B)),
                 decoration: inputDecoration(
                   hint: '@username',
                   icon: Icons.alternate_email_rounded,
@@ -297,9 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onSubmitted: (_) {
                   if (!loading) login();
                 },
-                style: const TextStyle(
-                  color: Color(0xFF18181B),
-                ),
+                style: const TextStyle(color: Color(0xFF18181B)),
                 decoration: inputDecoration(
                   hint: 'Viewsta Password',
                   icon: Icons.lock_outline_rounded,
@@ -340,8 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 23,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(
+                            valueColor: AlwaysStoppedAnimation<Color>(
                               Colors.white,
                             ),
                           ),
@@ -358,10 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             SizedBox(width: 9),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 20,
-                            ),
+                            Icon(Icons.arrow_forward_rounded, size: 20),
                           ],
                         ),
                 ),
@@ -374,18 +308,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text(
                     "Don't have an account? ",
-                    style: TextStyle(
-                      color: Color(0xFF71717A),
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Color(0xFF71717A), fontSize: 13),
                   ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const SignupScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
                       );
                     },
                     child: const Text(
