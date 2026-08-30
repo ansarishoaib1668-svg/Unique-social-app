@@ -1,86 +1,76 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../welcome_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _controller.forward();
+
+    Timer(const Duration(milliseconds: 2200), () {
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const WelcomeScreen(),
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xff141E30),
-              Color(0xff243B55),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      backgroundColor: Colors.white,
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Image.asset(
+              'assets/images/app_icon.png',
+              width: 105,
+              height: 105,
+              fit: BoxFit.contain,
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            const Icon(
-              Icons.play_circle_fill_rounded,
-              size: 90,
-              color: Colors.white,
-            ),
-
-            const SizedBox(height: 25),
-
-            const Text(
-              "Welcome to Viewsta",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              "Connect • Share • Discover",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 60),
-
-            SizedBox(
-              width: 280,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Login page open hoga
-                },
-                child: const Text("Login"),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: 280,
-              height: 50,
-              child: OutlinedButton(
-                onPressed: () {
-                  // Create account page open hoga
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white),
-                ),
-                child: const Text("Create Account"),
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
-} 
+}

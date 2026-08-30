@@ -1,17 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'edit_profile_screen.dart';
+
 import '../../models/post_model.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   static const _purple = Color(0xFF7C3AED);
   static const _blue = Color(0xFF38BDF8);
-  static const _background = Color(0xFF0F0F12);
-  static const _card = Color(0xFF1A1A22);
-  static const _muted = Color(0xFFA1A1AA);
+  static const _background = Colors.white;
+  static const _text = Color(0xFF18181B);
+  static const _muted = Color(0xFF71717A);
+  static const _border = Color(0xFFE4E4E7);
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +23,7 @@ class ProfileScreen extends StatelessWidget {
       return const Scaffold(
         backgroundColor: _background,
         body: Center(
-          child: Text(
-            'Please sign in again.',
-            style: TextStyle(color: Colors.white),
-          ),
+          child: Text('Please sign in again.', style: TextStyle(color: _text)),
         ),
       );
     }
@@ -49,7 +48,6 @@ class ProfileScreen extends StatelessWidget {
             'username';
 
         final bio = _readString(data['bio']) ?? 'Your bio goes here.';
-
         final location = _readString(data['location']);
         final interests = _readString(data['interests']);
         final website = _readString(data['website']);
@@ -74,8 +72,9 @@ class ProfileScreen extends StatelessWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                SliverToBoxAdapter(child: _topBar(context)),
                 SliverToBoxAdapter(
-                  child: _profileHeader(user, name, username, photoUrl),
+                  child: _profileHeader(name, username, photoUrl),
                 ),
                 SliverToBoxAdapter(
                   child: _stats(postsCount, followersCount, followingCount),
@@ -121,14 +120,40 @@ class ProfileScreen extends StatelessWidget {
     return 0;
   }
 
-  Widget _profileHeader(
-    User? user,
-    String name,
-    String username,
-    String? photoUrl,
-  ) {
+  Widget _topBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: _text,
+              size: 21,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.ios_share_rounded, color: _text, size: 21),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_horiz_rounded, color: _text, size: 24),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileHeader(String name, String username, String? photoUrl) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -143,95 +168,90 @@ class ProfileScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(3),
               decoration: const BoxDecoration(
-                color: _background,
+                color: Colors.white,
                 shape: BoxShape.circle,
               ),
               child: CircleAvatar(
-                backgroundColor: _card,
-                backgroundImage:
-                    photoUrl != null && photoUrl.isNotEmpty
+                backgroundColor: const Color(0xFFF4F4F5),
+                backgroundImage: photoUrl != null && photoUrl.isNotEmpty
                     ? NetworkImage(photoUrl)
                     : null,
                 child: photoUrl == null
                     ? const Icon(
                         Icons.person_outline_rounded,
-                        color: Colors.white70,
+                        color: _muted,
                         size: 42,
                       )
                     : null,
               ),
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    _verifiedBadge(user),
-                  ],
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '@$username',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _muted, fontSize: 14),
+                  style: const TextStyle(
+                    color: _muted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Newbie',
+                    style: TextStyle(
+                      color: _purple,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz_rounded, color: Colors.white),
           ),
         ],
       ),
     );
   }
 
-  Widget _verifiedBadge(User? user) {
-    // Verification will be connected to Firestore later.
-    // Do not show a badge for normal users.
-    return const SizedBox.shrink();
-  }
-
   Widget _stats(int postsCount, int followersCount, int followingCount) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
       child: Row(
         children: [
           Expanded(
-            child: _Stat(
-              value: postsCount.toString(),
-              label: 'Posts',
-            ),
+            child: _Stat(value: postsCount.toString(), label: 'Posts'),
           ),
           Expanded(
-            child: _Stat(
-              value: followersCount.toString(),
-              label: 'Supporters',
-            ),
+            child: _Stat(value: followersCount.toString(), label: 'Supporters'),
           ),
           Expanded(
-            child: _Stat(
-              value: followingCount.toString(),
-              label: 'Supporting',
-            ),
+            child: _Stat(value: followingCount.toString(), label: 'Supporting'),
           ),
         ],
       ),
@@ -249,8 +269,18 @@ class ProfileScreen extends StatelessWidget {
 
     if (joinedAt != null) {
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       joinedText =
@@ -260,44 +290,31 @@ class ProfileScreen extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             bio,
             style: const TextStyle(
-              color: Colors.white,
+              color: _text,
               fontSize: 14,
-              height: 1.4,
+              height: 1.45,
+              fontWeight: FontWeight.w500,
             ),
           ),
-
           if (location != null) ...[
             const SizedBox(height: 8),
-            _profileInfoRow(
-              Icons.location_on_outlined,
-              location,
-            ),
+            _profileInfoRow(Icons.location_on_outlined, location),
           ],
-
           if (interests != null) ...[
             const SizedBox(height: 7),
-            _profileInfoRow(
-              Icons.auto_awesome_outlined,
-              interests,
-            ),
+            _profileInfoRow(Icons.auto_awesome_outlined, interests),
           ],
-
           if (website != null) ...[
             const SizedBox(height: 7),
-            _profileInfoRow(
-              Icons.link_rounded,
-              website,
-              purple: true,
-            ),
+            _profileInfoRow(Icons.link_rounded, website, purple: true),
           ],
-
           if (joinedText != null) ...[
             const SizedBox(height: 8),
             _profileInfoRow(
@@ -310,25 +327,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _profileInfoRow(
-    IconData icon,
-    String value, {
-    bool purple = false,
-  }) {
+  Widget _profileInfoRow(IconData icon, String value, {bool purple = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 17,
-          color: purple ? _purple : _muted,
-        ),
+        Icon(icon, size: 17, color: purple ? _purple : _muted),
         const SizedBox(width: 7),
         Expanded(
           child: Text(
             value,
             style: TextStyle(
-              color: purple ? const Color(0xFFB9A0FF) : _muted,
+              color: purple ? _purple : _muted,
               fontSize: 13,
               height: 1.3,
             ),
@@ -340,7 +349,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _actions(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
+      padding: const EdgeInsets.fromLTRB(20, 5, 20, 14),
       child: Row(
         children: [
           Expanded(
@@ -348,16 +357,10 @@ class ProfileScreen extends StatelessWidget {
               label: 'Edit Profile',
               filled: true,
               onTap: () async {
-                final updated = await Navigator.push<bool>(
+                await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const EditProfileScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
                 );
-
-                if (updated == true) {
-                  // Profile data is reloaded when the screen rebuilds.
-                }
               },
             ),
           ),
@@ -376,7 +379,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _highlights() {
     return SizedBox(
-      height: 112,
+      height: 108,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -395,15 +398,19 @@ class ProfileScreen extends StatelessWidget {
             height: 68,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _card,
-              border: Border.all(color: const Color(0xFF35353D)),
+              color: Colors.white,
+              border: Border.all(color: _purple, width: 1.5),
             ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+            child: const Icon(Icons.add_rounded, color: _purple, size: 30),
           ),
           const SizedBox(height: 7),
           const Text(
             'New',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(
+              color: _text,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -415,8 +422,8 @@ class ProfileScreen extends StatelessWidget {
       margin: const EdgeInsets.only(top: 4),
       decoration: const BoxDecoration(
         border: Border(
-          top: BorderSide(color: Color(0xFF24242A)),
-          bottom: BorderSide(color: Color(0xFF24242A)),
+          top: BorderSide(color: _border),
+          bottom: BorderSide(color: _border),
         ),
       ),
       child: const Row(
@@ -441,11 +448,7 @@ class ProfileScreen extends StatelessWidget {
           return const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(30),
-              child: Center(
-                child: CircularProgressIndicator(
-                  color: _purple,
-                ),
-              ),
+              child: Center(child: CircularProgressIndicator(color: _purple)),
             ),
           );
         }
@@ -464,7 +467,8 @@ class ProfileScreen extends StatelessWidget {
           );
         }
 
-        final posts = snapshot.data?.docs
+        final posts =
+            snapshot.data?.docs
                 .map((doc) => PostModel.fromMap(doc.id, doc.data()))
                 .where((post) => post.userId == uid)
                 .toList() ??
@@ -473,11 +477,33 @@ class ProfileScreen extends StatelessWidget {
         if (posts.isEmpty) {
           return const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 45),
+              padding: EdgeInsets.symmetric(vertical: 48, horizontal: 20),
               child: Center(
-                child: Text(
-                  'No posts yet',
-                  style: TextStyle(color: Colors.white70),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 46,
+                      color: Color(0xFFD4D4D8),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'No posts yet',
+                      style: TextStyle(
+                        color: _text,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Share your first view with the world.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: _muted, fontSize: 13),
+                    ),
+                    SizedBox(height: 16),
+                    _CreatePostButton(),
+                  ],
                 ),
               ),
             ),
@@ -485,36 +511,31 @@ class ProfileScreen extends StatelessWidget {
         }
 
         return SliverGrid(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final post = posts[index];
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final post = posts[index];
 
-              if (post.imageUrl.isNotEmpty) {
-                return Image.network(
-                  post.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: _card,
+            if (post.imageUrl.isNotEmpty) {
+              return Image.network(
+                post.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: const Color(0xFFF4F4F5),
                     child: const Icon(
                       Icons.broken_image_outlined,
-                      color: Color(0xFF55555F),
+                      color: _muted,
                       size: 30,
                     ),
-                  ),
-                );
-              }
-
-              return Container(
-                color: _card,
-                child: const Icon(
-                  Icons.movie_outlined,
-                  color: Color(0xFF55555F),
-                  size: 30,
-                ),
+                  );
+                },
               );
-            },
-            childCount: posts.length,
-          ),
+            }
+
+            return Container(
+              color: const Color(0xFFF4F4F5),
+              child: const Icon(Icons.movie_outlined, color: _muted, size: 30),
+            );
+          }, childCount: posts.length),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             crossAxisSpacing: 2,
@@ -524,7 +545,6 @@ class ProfileScreen extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _Stat extends StatelessWidget {
@@ -540,7 +560,7 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: Color(0xFF18181B),
             fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
@@ -548,7 +568,7 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(color: Color(0xFF71717A), fontSize: 12),
         ),
       ],
     );
@@ -569,23 +589,23 @@ class _ProfileButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 42,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? const Color(0xFF7C3AED) : null,
+          backgroundColor: filled ? const Color(0xFF7C3AED) : Colors.white,
           side: BorderSide(
-            color: filled ? const Color(0xFF7C3AED) : const Color(0xFF35353D),
+            color: filled ? const Color(0xFF7C3AED) : const Color(0xFFD4D4D8),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(11),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.white,
-            fontWeight: filled ? FontWeight.w700 : FontWeight.w600,
+            color: filled ? Colors.white : const Color(0xFF18181B),
+            fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
         ),
@@ -603,12 +623,35 @@ class _ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 50,
       child: Center(
         child: Icon(
           icon,
-          color: active ? Colors.white : const Color(0xFF777781),
+          color: active ? const Color(0xFF7C3AED) : const Color(0xFFA1A1AA),
           size: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class _CreatePostButton extends StatelessWidget {
+  const _CreatePostButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF7C3AED),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Text(
+        '+ Create Post',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
