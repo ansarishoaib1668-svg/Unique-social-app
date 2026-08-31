@@ -177,6 +177,13 @@ class FirestoreService {
     required String text,
     String? imageUrl,
     String? videoUrl,
+    String? location,
+    String? music,
+    String? audience,
+    List<String>? mediaUrls,
+    bool allowComments = true,
+    bool allowDownloads = true,
+    bool showViewCount = true,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -192,6 +199,13 @@ class FirestoreService {
       'likes': 0,
       'passes': 0,
       'comments': [],
+      'location': location ?? '',
+      'music': music ?? '',
+      'audience': audience ?? 'Everyone',
+      'mediaUrls': mediaUrls ?? [],
+      'allowComments': allowComments,
+      'allowDownloads': allowDownloads,
+      'showViewCount': showViewCount,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
