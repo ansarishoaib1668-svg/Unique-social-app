@@ -7,7 +7,7 @@ import '../../services/firestore_service.dart';
 import '../moments/moments_screen.dart';
 import '../chat/chat_screen.dart';
 import '../profile/profile_screen.dart';
-import '../story/story_upload_screen.dart';
+import '../create/create_hub_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const StoryUploadScreen()),
+              MaterialPageRoute(builder: (_) => const CreateHubScreen()),
             ),
             icon: const Icon(Icons.add_rounded, color: text, size: 30),
           ),
@@ -189,8 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       color: _tab == i ? text : muted,
                       fontSize: 14,
-                      fontWeight:
-                          _tab == i ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: _tab == i ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -258,11 +257,13 @@ class _HomeScreenState extends State<HomeScreen> {
       future: FirebaseFirestore.instance.collection('users').doc(uid).get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
-        final username = data['username'] is String &&
+        final username =
+            data['username'] is String &&
                 (data['username'] as String).trim().isNotEmpty
             ? (data['username'] as String).trim()
             : 'User';
-        final photo = data['photoUrl'] is String &&
+        final photo =
+            data['photoUrl'] is String &&
                 (data['photoUrl'] as String).trim().isNotEmpty
             ? (data['photoUrl'] as String).trim()
             : null;
@@ -292,8 +293,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: CircleAvatar(
                       backgroundColor: const Color(0xFFF1F1F5),
-                      backgroundImage:
-                          photo == null ? null : NetworkImage(photo),
+                      backgroundImage: photo == null
+                          ? null
+                          : NetworkImage(photo),
                       child: photo == null
                           ? const Icon(
                               Icons.person_outline_rounded,
@@ -378,11 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(18),
               child: Text(
                 caption,
-                style: const TextStyle(
-                  color: text,
-                  fontSize: 16,
-                  height: 1.45,
-                ),
+                style: const TextStyle(color: text, fontSize: 16, height: 1.45),
               ),
             ),
           Padding(
@@ -403,12 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       : '',
                   () => _comment(post),
                 ),
-                _postIcon(
-                  Icons.send_outlined,
-                  text,
-                  '',
-                  () => _pass(post),
-                ),
+                _postIcon(Icons.send_outlined, text, '', () => _pass(post)),
                 const Spacer(),
                 _postIcon(
                   saved ? Icons.bookmark : Icons.bookmark_border,
@@ -424,11 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 7),
               child: Text(
                 caption,
-                style: const TextStyle(
-                  color: text,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
+                style: const TextStyle(color: text, fontSize: 13, height: 1.4),
               ),
             ),
           Padding(
@@ -456,16 +445,18 @@ class _HomeScreenState extends State<HomeScreen> {
       future: post.userId.isEmpty
           ? null
           : FirebaseFirestore.instance
-              .collection('users')
-              .doc(post.userId)
-              .get(),
+                .collection('users')
+                .doc(post.userId)
+                .get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
-        final username = data['username'] is String &&
+        final username =
+            data['username'] is String &&
                 (data['username'] as String).trim().isNotEmpty
             ? (data['username'] as String).trim()
             : 'viewsta_user';
-        final photo = data['photoUrl'] is String &&
+        final photo =
+            data['photoUrl'] is String &&
                 (data['photoUrl'] as String).trim().isNotEmpty
             ? (data['photoUrl'] as String).trim()
             : null;
@@ -478,13 +469,9 @@ class _HomeScreenState extends State<HomeScreen> {
               CircleAvatar(
                 radius: 21,
                 backgroundColor: const Color(0xFFF0F0F4),
-                backgroundImage:
-                    photo == null ? null : NetworkImage(photo),
+                backgroundImage: photo == null ? null : NetworkImage(photo),
                 child: photo == null
-                    ? const Icon(
-                        Icons.person_outline_rounded,
-                        color: muted,
-                      )
+                    ? const Icon(Icons.person_outline_rounded, color: muted)
                     : null,
               ),
               const SizedBox(width: 10),
@@ -560,12 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 30,
-              weight: 1.8,
-            ),
+            Icon(icon, color: color, size: 30, weight: 1.8),
             if (count.isNotEmpty) ...[
               const SizedBox(width: 5),
               Text(
@@ -603,7 +585,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       if (next) {
         await mine.set({'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
-        await theirs.set({'uid': me, 'createdAt': FieldValue.serverTimestamp()});
+        await theirs.set({
+          'uid': me,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       } else {
         await mine.delete();
         await theirs.delete();
@@ -619,8 +604,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final next = !(_liked[post.id] ?? false);
     setState(() {
       _liked[post.id] = next;
-      _localLikes[post.id] =
-          (post.likes + (next ? 1 : -1)).clamp(0, 1 << 30);
+      _localLikes[post.id] = (post.likes + (next ? 1 : -1)).clamp(0, 1 << 30);
     });
     try {
       await _firestore.setGlow(post.id, uid, next);
@@ -702,15 +686,8 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 82,
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(28),
-          ),
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFFE8E8EE),
-              width: 0.8,
-            ),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFFE8E8EE), width: 0.8)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -737,16 +714,12 @@ class _HomeScreenState extends State<HomeScreen> {
           if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const ChatScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ChatScreen()),
             );
           } else if (index == 4) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
             );
           }
         },
@@ -757,9 +730,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(
                 icon,
-                color: active
-                    ? const Color(0xFF7C3AED)
-                    : Colors.black,
+                color: active ? const Color(0xFF7C3AED) : Colors.black,
                 size: 32,
               ),
               const SizedBox(height: 5),
@@ -769,9 +740,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 7,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: active
-                      ? const Color(0xFF7C3AED)
-                      : Colors.transparent,
+                  color: active ? const Color(0xFF7C3AED) : Colors.transparent,
                 ),
               ),
             ],
@@ -784,8 +753,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _compact(int n) => n >= 1000000
       ? '${(n / 1000000).toStringAsFixed(1)}M'
       : n >= 1000
-          ? '${(n / 1000).toStringAsFixed(1)}K'
-          : '$n';
+      ? '${(n / 1000).toStringAsFixed(1)}K'
+      : '$n';
 
   String _postTime(DateTime? time) {
     if (time == null) return 'Just now';
