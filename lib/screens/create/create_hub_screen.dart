@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'create_post_screen.dart';
+import 'view_realm_screen.dart';
 
 class CreateHubScreen extends StatelessWidget {
   const CreateHubScreen({super.key});
@@ -71,7 +72,14 @@ class CreateHubScreen extends StatelessWidget {
                   _CreateItem(
                     icon: Icons.movie_creation_outlined,
                     title: 'Reel',
-                    onTap: () => _comingSoon(context, 'Reel creation'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ViewRealmScreen(),
+                        ),
+                      );
+                    },
                   ),
 
                   _CreateItem(
