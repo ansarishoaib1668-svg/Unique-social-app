@@ -24,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static const border = Color(0xFFE8E8EE);
 
   final _firestore = FirestoreService();
+  late final Stream<List<PostModel>> _postsStream;
+
   final Map<String, bool> _supported = {};
   final Map<String, bool> _liked = {};
   final Map<String, bool> _saved = {};
@@ -31,6 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
 
   User? get _user => FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _postsStream = _firestore.getPosts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SliverToBoxAdapter(child: _tabs()),
                   SliverToBoxAdapter(child: _stories()),
                   StreamBuilder<List<PostModel>>(
-                    stream: _firestore.getPosts(),
+                    stream: _postsStream,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const SliverToBoxAdapter(
@@ -440,14 +448,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  final Map<String, Future<DocumentSnapshot<Map<String, dynamic>>>>
+  _userFutures = {};
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> _getUserFuture(String uid) {
+    return _userFutures.putIfAbsent(
+      uid,
+      () => FirebaseFirestore.instance.collection('users').doc(uid).get(),
+    );
+  }
+
   Widget _postHeader(PostModel post, bool isOwn) {
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: post.userId.isEmpty
-          ? null
-          : FirebaseFirestore.instance
-                .collection('users')
-                .doc(post.userId)
-                .get(),
+      future: post.userId.isEmpty ? null : _getUserFuture(post.userId),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
         final username =
