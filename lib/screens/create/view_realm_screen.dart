@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,11 +10,7 @@ class ViewRealmScreen extends StatefulWidget {
   final String? videoPath;
   final String? realmId;
 
-  const ViewRealmScreen({
-    super.key,
-    this.videoPath,
-    this.realmId,
-  });
+  const ViewRealmScreen({super.key, this.videoPath, this.realmId});
 
   @override
   State<ViewRealmScreen> createState() => _ViewRealmScreenState();
@@ -37,7 +34,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
   };
 
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
-      _pulseCountsSubscription;
+  _pulseCountsSubscription;
 
   Future<void> _loadSavedPulse() async {
     final realmId = widget.realmId;
@@ -87,14 +84,18 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     _listenToPulseCounts();
 
     if (widget.videoPath != null && widget.videoPath!.isNotEmpty) {
-      _controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoPath!),
-      )..initialize().then((_) {
-          if (!mounted) return;
-          setState(() => _isReady = true);
-          _controller!.setLooping(true);
-          _controller!.play();
-        });
+      final path = widget.videoPath!;
+
+      _controller = path.startsWith('http://') || path.startsWith('https://')
+          ? VideoPlayerController.networkUrl(Uri.parse(path))
+          : VideoPlayerController.file(File(path));
+
+      _controller!.initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _isReady = true);
+        _controller!.setLooping(true);
+        _controller!.play();
+      });
     }
   }
 
@@ -111,9 +112,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     if (controller == null || !_isReady) return;
 
     setState(() {
-      controller.value.isPlaying
-          ? controller.pause()
-          : controller.play();
+      controller.value.isPlaying ? controller.pause() : controller.play();
     });
   }
 
@@ -157,10 +156,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
           // Top navigation.
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
                   _glassButton(
@@ -173,13 +169,13 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
                     children: [
                       const Text(
                         '✦ VIEW REALM',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       _viewTrail(),
                     ],
@@ -204,12 +200,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
           ),
 
           // Bottom View identity.
-          Positioned(
-            left: 18,
-            right: 18,
-            bottom: 28,
-            child: _bottomView(),
-          ),
+          Positioned(left: 18, right: 18, bottom: 28, child: _bottomView()),
         ],
       ),
     );
@@ -241,9 +232,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -278,15 +267,11 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
                 children: List.generate(
                   3,
                   (index) => Padding(
-                    padding: EdgeInsets.only(
-                      right: index == 2 ? 0 : 5,
-                    ),
+                    padding: EdgeInsets.only(right: index == 2 ? 0 : 5),
                     child: _trailDot(
                       index == activeIndex
                           ? glow
-                          : (index == (activeIndex + 1) % 3
-                              ? 0.35
-                              : 0.22),
+                          : (index == (activeIndex + 1) % 3 ? 0.35 : 0.22),
                     ),
                   ),
                 ),
@@ -298,10 +283,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     );
   }
 
-  Widget _glassButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _glassButton({required IconData icon, required VoidCallback onTap}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -313,15 +295,9 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.34),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.18),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 21,
-          ),
+          child: Icon(icon, color: Colors.white, size: 21),
         ),
       ),
     );
@@ -342,9 +318,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.black.withValues(alpha: 0.30),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -356,9 +330,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.12),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.28),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
             ),
             child: Center(
               child: Text(
@@ -376,46 +348,30 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
 
           Positioned(
             top: 5,
-            child: _pulseButton(
-              emoji: pulses[0].$1,
-              label: pulses[0].$2,
-            ),
+            child: _pulseButton(emoji: pulses[0].$1, label: pulses[0].$2),
           ),
           Positioned(
             left: 5,
-            child: _pulseButton(
-              emoji: pulses[1].$1,
-              label: pulses[1].$2,
-            ),
+            child: _pulseButton(emoji: pulses[1].$1, label: pulses[1].$2),
           ),
           Positioned(
             right: 5,
-            child: _pulseButton(
-              emoji: pulses[2].$1,
-              label: pulses[2].$2,
-            ),
+            child: _pulseButton(emoji: pulses[2].$1, label: pulses[2].$2),
           ),
           Positioned(
             bottom: 5,
             left: 25,
-            child: _pulseButton(
-              emoji: pulses[3].$1,
-              label: pulses[3].$2,
-            ),
+            child: _pulseButton(emoji: pulses[3].$1, label: pulses[3].$2),
           ),
           Positioned(
             bottom: 5,
             right: 25,
-            child: _pulseButton(
-              emoji: pulses[4].$1,
-              label: pulses[4].$2,
-            ),
+            child: _pulseButton(emoji: pulses[4].$1, label: pulses[4].$2),
           ),
         ],
       ),
     );
   }
-
 
   Future<void> _savePulseReaction({
     required String? previousPulse,
@@ -424,10 +380,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     final realmId = widget.realmId;
     final user = FirebaseAuth.instance.currentUser;
 
-    if (realmId == null ||
-        realmId.isEmpty ||
-        user == null ||
-        _savingPulse) {
+    if (realmId == null || realmId.isEmpty || user == null || _savingPulse) {
       return;
     }
 
@@ -458,17 +411,12 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
         }
 
         void updateCount(String pulse, int change) {
-          final next =
-              (currentCount(pulse) + change).clamp(0, 999999);
+          final next = (currentCount(pulse) + change).clamp(0, 999999);
 
-          transaction.set(
-            countRef,
-            {
-              pulse: next,
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+          transaction.set(countRef, {
+            pulse: next,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         }
 
         if (previousPulse != null &&
@@ -480,14 +428,10 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
         if (newPulse != null && newPulse.isNotEmpty) {
           updateCount(newPulse, 1);
 
-          transaction.set(
-            reactionRef,
-            {
-              'pulse': newPulse,
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+          transaction.set(reactionRef, {
+            'pulse': newPulse,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         } else {
           transaction.delete(reactionRef);
         }
@@ -495,9 +439,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pulse save nahi ho paya.'),
-          ),
+          const SnackBar(content: Text('Pulse save nahi ho paya.')),
         );
       }
     } finally {
@@ -521,22 +463,21 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
         .doc('totals')
         .snapshots()
         .listen((snap) {
-      if (!mounted || !snap.exists) return;
+          if (!mounted || !snap.exists) return;
 
-      final data = snap.data();
-      if (data == null) return;
+          final data = snap.data();
+          if (data == null) return;
 
-      setState(() {
-        for (final label in _pulseReactions.keys) {
-          final value = data[label];
+          setState(() {
+            for (final label in _pulseReactions.keys) {
+              final value = data[label];
 
-          if (value is num) {
-            _pulseReactions[label] =
-                value.toInt().clamp(0, 999999);
-          }
-        }
-      });
-    });
+              if (value is num) {
+                _pulseReactions[label] = value.toInt().clamp(0, 999999);
+              }
+            }
+          });
+        });
   }
 
   Future<void> _loadPulseCounts() async {
@@ -573,42 +514,31 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
     }
   }
 
-
-  Widget _pulseButton({
-    required String emoji,
-    required String label,
-  }) {
+  Widget _pulseButton({required String emoji, required String label}) {
     final selected = _selectedPulse == label;
 
     return GestureDetector(
       onTap: () async {
         if (_savingPulse) return;
 
-        final previous =
-            _selectedPulse == 'VIEW' ? null : _selectedPulse;
+        final previous = _selectedPulse == 'VIEW' ? null : _selectedPulse;
 
         final next = selected ? null : label;
 
         setState(() {
-          if (previous != null &&
-              _pulseReactions.containsKey(previous)) {
-            _pulseReactions[previous] =
-                (_pulseReactions[previous] ?? 0) - 1;
+          if (previous != null && _pulseReactions.containsKey(previous)) {
+            _pulseReactions[previous] = (_pulseReactions[previous] ?? 0) - 1;
           }
 
           if (next != null) {
-            _pulseReactions[next] =
-                (_pulseReactions[next] ?? 0) + 1;
+            _pulseReactions[next] = (_pulseReactions[next] ?? 0) + 1;
             _selectedPulse = next;
           } else {
             _selectedPulse = 'VIEW';
           }
         });
 
-        await _savePulseReaction(
-          previousPulse: previous,
-          newPulse: next,
-        );
+        await _savePulseReaction(previousPulse: previous, newPulse: next);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
@@ -637,10 +567,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              emoji,
-              style: const TextStyle(fontSize: 17),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 17)),
             if ((_pulseReactions[label] ?? 0) > 0)
               Text(
                 '${_pulseReactions[label]}',
@@ -670,9 +597,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.38),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,9 +624,7 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _selectedPulse == "VIEW"
-                      ? "LIVE"
-                      : "$_selectedPulse • LIVE",
+                  _selectedPulse == "VIEW" ? "LIVE" : "$_selectedPulse • LIVE",
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 8,
@@ -712,49 +635,51 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
             ],
           ),
           const SizedBox(height: 10),
-          ...entries.map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 7),
-            child: Row(
-              children: [
-                Text(entry.$1, style: const TextStyle(fontSize: 13)),
-                const SizedBox(width: 7),
-                SizedBox(
-                  width: 58,
-                  child: Text(
-                    entry.$2,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
+          ...entries.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                children: [
+                  Text(entry.$1, style: const TextStyle(fontSize: 13)),
+                  const SizedBox(width: 7),
+                  SizedBox(
+                    width: 58,
+                    child: Text(
+                      entry.$2,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: (entry.$3 / 100).clamp(0.0, 1.0),
-                      minHeight: 5,
-                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: (entry.$3 / 100).clamp(0.0, 1.0),
+                        minHeight: 5,
+                        backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 7),
-                SizedBox(
-                  width: 30,
-                  child: Text(
-                    "${entry.$3}%",
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
+                  const SizedBox(width: 7),
+                  SizedBox(
+                    width: 30,
+                    child: Text(
+                      "${entry.$3}%",
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -806,16 +731,11 @@ class _ViewRealmScreenState extends State<ViewRealmScreen>
 
   Widget _stat(String emoji, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Text(
         '$emoji $text',
