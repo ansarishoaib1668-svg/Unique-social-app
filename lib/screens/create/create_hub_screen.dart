@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'create_post_screen.dart';
 import 'view_realm_screen.dart';
@@ -72,14 +73,7 @@ class CreateHubScreen extends StatelessWidget {
                   _CreateItem(
                     icon: Icons.movie_creation_outlined,
                     title: 'Reel',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ViewRealmScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _pickReel(context),
                   ),
 
                   _CreateItem(
@@ -126,6 +120,91 @@ class CreateHubScreen extends StatelessWidget {
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+
+  static Future<void> _pickReel(BuildContext context) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Create Reel',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Choose how you want to add your Reel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 18),
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFF1E8FF),
+                    child: Icon(
+                      Icons.photo_library_outlined,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                  title: const Text(
+                    'Gallery',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: const Text('Choose a video from your phone'),
+                  onTap: () => Navigator.pop(sheetContext, 'gallery'),
+                ),
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFF1E8FF),
+                    child: Icon(
+                      Icons.videocam_outlined,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                  title: const Text(
+                    'Camera',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: const Text('Record a new Reel'),
+                  onTap: () => Navigator.pop(sheetContext, 'camera'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (choice == null || !context.mounted) return;
+
+    final picker = ImagePicker();
+
+    final file = await picker.pickVideo(
+      source: choice == 'camera'
+          ? ImageSource.camera
+          : ImageSource.gallery,
+      maxDuration: const Duration(minutes: 10),
+    );
+
+    if (file == null || !context.mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ViewRealmScreen(videoPath: file.path),
       ),
     );
   }

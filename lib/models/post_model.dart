@@ -7,6 +7,7 @@ class PostModel {
   final int likes;
   final String imageUrl;
   final String videoUrl;
+  final String type;
   final List<String> comments;
   final DateTime? createdAt;
 
@@ -17,6 +18,7 @@ class PostModel {
     required this.likes,
     required this.imageUrl,
     required this.videoUrl,
+    required this.type,
     required this.comments,
     required this.createdAt,
   });
@@ -50,6 +52,7 @@ class PostModel {
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
+      type: map['type'] is String ? map['type'] as String : 'photo',
     );
   }
 }

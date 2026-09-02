@@ -181,6 +181,7 @@ class FirestoreService {
     String? music,
     String? audience,
     List<String>? mediaUrls,
+    String type = 'post',
     bool allowComments = true,
     bool allowDownloads = true,
     bool showViewCount = true,
@@ -193,6 +194,7 @@ class FirestoreService {
 
     await _db.collection('posts').add({
       'userId': user.uid,
+      'type': type,
       'text': text,
       'imageUrl': imageUrl ?? '',
       'videoUrl': videoUrl ?? '',

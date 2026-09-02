@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../models/post_model.dart';
 import '../../services/firestore_service.dart';
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, bool> _liked = {};
   final Map<String, bool> _saved = {};
   final Map<String, int> _localLikes = {};
+  final Map<String, VideoPlayerController> _reelControllers = {};
   int _tab = 0;
 
   User? get _user => FirebaseAuth.instance.currentUser;
@@ -329,6 +331,95 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _reelPlayer(PostModel post) {
+    final url = post.videoUrl.trim();
+
+    var controller = _reelControllers[post.id];
+
+    if (controller == null) {
+      controller = VideoPlayerController.networkUrl(Uri.parse(url));
+      _reelControllers[post.id] = controller;
+
+      controller.initialize().then((_) {
+        if (!mounted) return;
+        controller!
+          ..setLooping(true)
+          ..setVolume(0)
+          ..play();
+        setState(() {});
+      });
+    }
+
+    if (!controller.value.isInitialized) {
+      return AspectRatio(
+        aspectRatio: 4 / 5,
+        child: const Center(
+          child: CircularProgressIndicator(color: purple, strokeWidth: 2),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (controller!.value.isPlaying) {
+          controller.pause();
+        } else {
+          controller.play();
+        }
+        setState(() {});
+      },
+      child: AspectRatio(
+        aspectRatio: 4 / 5,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: controller.value.size.width,
+                height: controller.value.size.height,
+                child: VideoPlayer(controller),
+              ),
+            ),
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: GestureDetector(
+                onTap: () {
+                  controller!.setVolume(controller.value.volume > 0 ? 0 : 1);
+                  setState(() {});
+                },
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    controller.value.volume > 0
+                        ? Icons.volume_up_rounded
+                        : Icons.volume_off_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            if (!controller.value.isPlaying)
+              const Center(
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 64,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _postCard(PostModel post) {
     final image = post.imageUrl.trim();
     final caption = post.text.trim();
@@ -344,7 +435,9 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _postHeader(post, isOwn),
-          if (image.isNotEmpty)
+          if (post.type == 'reel' && post.videoUrl.trim().isNotEmpty)
+            _reelPlayer(post)
+          else if (image.isNotEmpty)
             AspectRatio(
               aspectRatio: 4 / 5,
               child: Image.network(
