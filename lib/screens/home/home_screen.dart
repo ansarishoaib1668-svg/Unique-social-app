@@ -123,10 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: border, width: .7)),
-      ),
+      color: Colors.white,
       child: Row(
         children: [
           IconButton(
@@ -134,39 +131,66 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               MaterialPageRoute(builder: (_) => const CreateHubScreen()),
             ),
-            icon: const Icon(Icons.add_rounded, color: text, size: 30),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+            icon: const Icon(Icons.add_box_outlined, color: text, size: 29),
           ),
           const Spacer(),
           const Text(
             'Viewsta',
             style: TextStyle(
-              color: purple,
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.4,
+              color: text,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              fontStyle: FontStyle.italic,
+              letterSpacing: -1.5,
             ),
           ),
           const Spacer(),
+          IconButton(
+            onPressed: () {},
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+            icon: const Icon(
+              Icons.favorite_border_rounded,
+              color: text,
+              size: 28,
+            ),
+          ),
           Stack(
             clipBehavior: Clip.none,
             children: [
               IconButton(
-                onPressed: () {},
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatScreen()),
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
                 icon: const Icon(
-                  Icons.notifications_none_rounded,
+                  Icons.chat_bubble_outline_rounded,
                   color: text,
-                  size: 29,
+                  size: 27,
                 ),
               ),
               Positioned(
-                right: 8,
-                top: 7,
+                right: 0,
+                top: 1,
                 child: Container(
-                  width: 7,
-                  height: 7,
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
                   decoration: const BoxDecoration(
-                    color: purple,
+                    color: Color(0xFFFF3040),
                     shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    '3',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -789,19 +813,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        height: 82,
+        height: 78,
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: Color(0xFFE8E8EE), width: 0.8)),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _navIcon(Icons.home_outlined, 0),
-            _navIcon(Icons.ondemand_video_outlined, 1),
-            _navIcon(Icons.chat_bubble_outline_rounded, 2),
-            _navIcon(Icons.search_rounded, 3),
+            _navIcon(Icons.home_rounded, 0),
+            _navIcon(Icons.search_rounded, 1),
+            _navIcon(Icons.ondemand_video_outlined, 2),
+            _navIcon(Icons.auto_awesome_outlined, 3),
             _navIcon(Icons.person_outline_rounded, 4),
           ],
         ),
@@ -820,7 +842,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChatScreen()),
+              MaterialPageRoute(builder: (_) => const MomentsScreen()),
             );
           } else if (index == 4) {
             Navigator.push(
@@ -830,26 +852,27 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
         child: SizedBox(
-          height: 82,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: active ? const Color(0xFF7C3AED) : Colors.black,
-                size: 32,
-              ),
-              const SizedBox(height: 5),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: active ? const Color(0xFF7C3AED) : Colors.transparent,
-                ),
-              ),
-            ],
+          height: 78,
+          child: Center(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: Colors.black, size: active ? 31 : 29),
+                if (index == 3)
+                  Positioned(
+                    right: -3,
+                    top: -3,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: purple,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
