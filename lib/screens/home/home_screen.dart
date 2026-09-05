@@ -19,7 +19,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const purple = Color(0xFF7C3AED);
-  static const blue = Color(0xFF38BDF8);
   static const text = Color(0xFF111114);
   static const muted = Color(0xFF777781);
   static const border = Color(0xFFE8E8EE);
@@ -120,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() {
     return Container(
-      height: 72,
+      height: 78,
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -211,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: FirebaseFirestore.instance.collection('stories').snapshots(),
       builder: (context, snapshot) {
         final now = DateTime.now();
+
         final docs = (snapshot.data?.docs ?? []).where((doc) {
           final created = doc.data()['createdAt'];
           if (created is Timestamp) {
@@ -219,9 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return true;
         }).toList();
 
-        if (docs.isEmpty) return const SizedBox(height: 12);
-
         final ids = <String>[];
+
         for (final doc in docs) {
           final id = doc.data()['userId'];
           if (id is String && id.isNotEmpty && !ids.contains(id)) {
@@ -230,20 +229,108 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         return Container(
-          height: 126,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: border, width: .7)),
-          ),
+          height: 138,
+          color: Colors.white,
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
             scrollDirection: Axis.horizontal,
-            itemCount: ids.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (_, index) => _storyItem(ids[index]),
+            physics: const BouncingScrollPhysics(),
+            itemCount: ids.length + 1,
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            itemBuilder: (_, index) {
+              if (index == 0) {
+                return _yourStoryItem();
+              }
+
+              return _storyItem(ids[index - 1]);
+            },
           ),
         );
       },
+    );
+  }
+
+  Widget _yourStoryItem() {
+    final photo = _user?.photoURL;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreateHubScreen()),
+        );
+      },
+      child: SizedBox(
+        width: 78,
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFFC107),
+                        Color(0xFFFF176B),
+                        Color(0xFF7C3AED),
+                      ],
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(2.5),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: const Color(0xFFF1F1F5),
+                      backgroundImage: photo == null
+                          ? null
+                          : NetworkImage(photo),
+                      child: photo == null
+                          ? const Icon(
+                              Icons.person_outline_rounded,
+                              color: muted,
+                              size: 30,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -1,
+                  bottom: -1,
+                  child: Container(
+                    width: 25,
+                    height: 25,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF168BFF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              'Your story',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: muted,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -252,11 +339,13 @@ class _HomeScreenState extends State<HomeScreen> {
       future: FirebaseFirestore.instance.collection('users').doc(uid).get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
+
         final username =
             data['username'] is String &&
                 (data['username'] as String).trim().isNotEmpty
             ? (data['username'] as String).trim()
             : 'User';
+
         final photo =
             data['photoUrl'] is String &&
                 (data['photoUrl'] as String).trim().isNotEmpty
@@ -275,10 +364,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   width: 72,
                   height: 72,
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(2.5),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [purple, blue]),
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFFC107),
+                        Color(0xFFFF176B),
+                        Color(0xFF7C3AED),
+                      ],
+                    ),
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(2.5),
@@ -300,13 +395,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 7),
                 Text(
-                  '@$username',
+                  username,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: text, fontSize: 10.5),
+                  style: const TextStyle(
+                    color: text,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -415,70 +514,95 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Container(
       color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _postHeader(post, isOwn),
-          if (post.type == 'reel' && post.videoUrl.trim().isNotEmpty)
-            _reelPlayer(post)
-          else if (image.isNotEmpty)
-            AspectRatio(
-              aspectRatio: 4 / 5,
-              child: Image.network(
-                image,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (_, child, progress) => progress == null
-                    ? child
-                    : const Center(
-                        child: CircularProgressIndicator(
-                          color: purple,
-                          strokeWidth: 2,
+
+          Stack(
+            children: [
+              if (post.type == 'reel' && post.videoUrl.trim().isNotEmpty)
+                _reelPlayer(post)
+              else if (image.isNotEmpty)
+                AspectRatio(
+                  aspectRatio: 4 / 5,
+                  child: Image.network(
+                    image,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (_, child, progress) => progress == null
+                        ? child
+                        : const Center(
+                            child: CircularProgressIndicator(
+                              color: purple,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                    errorBuilder: (_, _, _) => Container(
+                      color: const Color(0xFFF3F3F7),
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: muted,
+                          size: 42,
                         ),
                       ),
-                errorBuilder: (_, _, _) => Container(
-                  color: const Color(0xFFF3F3F7),
-                  child: const Center(
-                    child: Icon(
-                      Icons.broken_image_outlined,
-                      color: muted,
-                      size: 42,
+                    ),
+                  ),
+                )
+              else if (caption.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Text(
+                    caption,
+                    style: const TextStyle(
+                      color: text,
+                      fontSize: 16,
+                      height: 1.45,
                     ),
                   ),
                 ),
-              ),
-            )
-          else if (post.videoUrl.trim().isNotEmpty)
-            Container(
-              height: 280,
-              color: const Color(0xFFF3F3F7),
-              child: const Center(
-                child: Icon(
-                  Icons.play_circle_outline_rounded,
-                  color: text,
-                  size: 52,
+
+              if (image.isNotEmpty)
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: .58),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Text(
+                      '1/1',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            )
-          else if (caption.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                caption,
-                style: const TextStyle(color: text, fontSize: 16, height: 1.45),
-              ),
-            ),
+            ],
+          ),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 12, 5),
+            padding: const EdgeInsets.fromLTRB(16, 10, 14, 4),
             child: Row(
               children: [
                 _postIcon(
-                  liked ? Icons.favorite : Icons.favorite_border,
-                  liked ? const Color(0xFFFF3B5C) : text,
+                  liked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  liked ? const Color(0xFFFF304F) : text,
                   likes > 0 ? _compact(likes) : '',
                   () => _toggleLike(post),
                 ),
+                const SizedBox(width: 3),
                 _postIcon(
                   Icons.chat_bubble_outline_rounded,
                   text,
@@ -487,10 +611,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       : '',
                   () => _comment(post),
                 ),
+                const SizedBox(width: 3),
                 _postIcon(Icons.send_outlined, text, '', () => _pass(post)),
                 const Spacer(),
                 _postIcon(
-                  saved ? Icons.bookmark : Icons.bookmark_border,
+                  saved
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
                   text,
                   '',
                   () => _toggleSave(post),
@@ -498,30 +625,97 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+
+          if (likes > 0) _likedBySection(likes),
+
           if (caption.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 7),
-              child: Text(
-                caption,
-                style: const TextStyle(color: text, fontSize: 13, height: 1.4),
+              padding: const EdgeInsets.fromLTRB(16, 1, 16, 6),
+              child: RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    color: text,
+                    fontSize: 13.5,
+                    height: 1.45,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Viewsta User ',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: caption),
+                  ],
+                ),
               ),
             ),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 5),
             child: Text(
-              'View ${_compact(likes)}  ·  ${post.comments.isEmpty ? 'View all comments' : 'View all ${post.comments.length} comments'}',
-              style: const TextStyle(color: muted, fontSize: 12),
+              post.comments.isEmpty
+                  ? 'View all comments'
+                  : 'View all ${post.comments.length} comments',
+              style: const TextStyle(color: muted, fontSize: 12.5),
             ),
           ),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 15),
             child: Text(
               _postTime(post.createdAt),
-              style: const TextStyle(color: muted, fontSize: 10),
+              style: const TextStyle(color: muted, fontSize: 10.5),
             ),
           ),
+
           const Divider(height: 1, color: border),
         ],
+      ),
+    );
+  }
+
+  Widget _likedBySection(int likes) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 7),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            height: 26,
+            child: Stack(
+              children: [
+                _miniAvatar(0),
+                Positioned(left: 18, child: _miniAvatar(1)),
+                Positioned(left: 36, child: _miniAvatar(2)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              'Liked by others and ${_compact(likes)} people',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: text, fontSize: 12.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniAvatar(int index) {
+    return Container(
+      width: 27,
+      height: 27,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F4),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: Icon(
+        Icons.person_rounded,
+        size: 16,
+        color: index == 0 ? const Color(0xFF777781) : const Color(0xFF9999A3),
       ),
     );
   }
@@ -541,56 +735,132 @@ class _HomeScreenState extends State<HomeScreen> {
       future: post.userId.isEmpty ? null : _getUserFuture(post.userId),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? {};
+
         final username =
             data['username'] is String &&
                 (data['username'] as String).trim().isNotEmpty
             ? (data['username'] as String).trim()
             : 'viewsta_user';
+
         final photo =
             data['photoUrl'] is String &&
                 (data['photoUrl'] as String).trim().isNotEmpty
             ? (data['photoUrl'] as String).trim()
             : null;
-        final supported = _supported[post.userId] ?? false;
+
+        final verified = data['verified'] == true || data['isVerified'] == true;
+
+        final location =
+            data['location'] is String &&
+                (data['location'] as String).trim().isNotEmpty
+            ? (data['location'] as String).trim()
+            : 'India';
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 21,
-                backgroundColor: const Color(0xFFF0F0F4),
-                backgroundImage: photo == null ? null : NetworkImage(photo),
-                child: photo == null
-                    ? const Icon(Icons.person_outline_rounded, color: muted)
-                    : null,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '@$username',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: text,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+              Container(
+                width: 48,
+                height: 48,
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFFFC107), Color(0xFFFF176B), purple],
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: const Color(0xFFF0F0F4),
+                    backgroundImage: photo == null ? null : NetworkImage(photo),
+                    child: photo == null
+                        ? const Icon(Icons.person_outline_rounded, color: muted)
+                        : null,
                   ),
                 ),
               ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: text,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+
+                        if (verified) ...[
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.verified_rounded,
+                            color: Color(0xFF1597F5),
+                            size: 17,
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    const SizedBox(height: 2),
+
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: muted,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: muted,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
               if (!isOwn)
                 OutlinedButton(
                   onPressed: _user == null
                       ? null
                       : () => _toggleSupport(post.userId),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: supported ? purple : text,
+                    foregroundColor: (_supported[post.userId] ?? false)
+                        ? purple
+                        : text,
                     side: BorderSide(
-                      color: supported ? purple : text,
+                      color: (_supported[post.userId] ?? false) ? purple : text,
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -600,17 +870,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
-                    supported ? 'Supporting' : 'Support',
+                    (_supported[post.userId] ?? false)
+                        ? 'Supporting'
+                        : 'Support',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+
               IconButton(
                 onPressed: () {},
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36),
+                constraints: const BoxConstraints(minWidth: 34),
                 icon: const Icon(
                   Icons.more_vert_rounded,
                   color: text,
@@ -774,25 +1047,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        height: 78,
+        height: 82,
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: Color(0xFFE8E8EE), width: 0.8)),
         ),
         child: Row(
           children: [
-            _navIcon(Icons.home_rounded, 0),
-            _navIcon(Icons.search_rounded, 1),
-            _navIcon(Icons.ondemand_video_outlined, 2),
-            _navIcon(Icons.auto_awesome_outlined, 3),
-            _navIcon(Icons.person_outline_rounded, 4),
+            _navItem(Icons.home_rounded, 'Home', 0),
+            _navItem(Icons.search_rounded, 'Search', 1),
+            _navItem(Icons.ondemand_video_outlined, 'Reels', 2),
+            _navItem(Icons.auto_awesome_outlined, 'Discover', 3),
+            _navItem(Icons.person_outline_rounded, 'Profile', 4),
           ],
         ),
       ),
     );
   }
 
-  Widget _navIcon(IconData icon, int index) {
+  Widget _navItem(IconData icon, String label, int index) {
     final active = _tab == index;
 
     return Expanded(
@@ -813,28 +1086,39 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
         child: SizedBox(
-          height: 78,
-          child: Center(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, color: Colors.black, size: active ? 31 : 29),
-
-                if (index == 3)
-                  Positioned(
-                    right: -4,
-                    top: -4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: purple,
-                        shape: BoxShape.circle,
+          height: 82,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(icon, color: Colors.black, size: active ? 29 : 27),
+                  if (index == 3)
+                    Positioned(
+                      right: -3,
+                      top: -3,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: purple,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: text,
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ),
