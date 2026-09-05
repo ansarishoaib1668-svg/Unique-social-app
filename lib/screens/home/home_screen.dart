@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../models/post_model.dart';
@@ -603,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 3),
                 _postIcon(
-                  Icons.chat_bubble_outline_rounded,
+                  Icons.mode_comment_outlined,
                   text,
                   post.comments.isNotEmpty
                       ? _compact(post.comments.length)
@@ -611,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   () => _comment(post),
                 ),
                 const SizedBox(width: 3),
-                _postIcon(Icons.send_outlined, text, '', () => _pass(post)),
+                _postIcon(Icons.send_rounded, text, '', () => _sharePost(post)),
                 const Spacer(),
                 _postIcon(
                   saved
@@ -871,11 +872,11 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 29, weight: 1.8),
+            Icon(icon, color: color, size: 27, weight: 1.8),
             if (count.isNotEmpty) ...[
               const SizedBox(width: 5),
               Text(
@@ -925,11 +926,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _pass(PostModel post) async {
-    final uid = _user?.uid;
-    if (uid == null) return;
+  Future<void> _sharePost(PostModel post) async {
+    final text = post.text.trim();
+
     try {
-      await _firestore.recordPass(post.id, uid);
+      await Share.share(
+        text.isEmpty
+            ? 'Check out this post on Viewsta'
+            : '$text\n\nShared from Viewsta',
+      );
     } catch (_) {}
   }
 
@@ -978,17 +983,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        height: 82,
+        height: 68,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE8E8EE), width: 0.8)),
+          border: Border(top: BorderSide(color: Color(0xFFE8E8EE), width: 0.7)),
         ),
         child: Row(
           children: [
-            _navItem(Icons.home_rounded, 'Home', 0),
+            _navItem(Icons.home_outlined, 'Home', 0),
             _navItem(Icons.search_rounded, 'Search', 1),
-            _navItem(Icons.ondemand_video_outlined, 'Reels', 2),
-            _navItem(Icons.shopping_bag_outlined, 'Shop', 3),
+            _navItem(Icons.movie_creation_outlined, 'Reels', 2),
+            _navItem(Icons.explore_outlined, 'Discover', 3),
             _navItem(Icons.person_outline_rounded, 'Profile', 4),
           ],
         ),
@@ -1016,36 +1021,20 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         },
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: SizedBox(
-          height: 82,
+          height: 68,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(icon, color: Colors.black, size: active ? 29 : 27),
-                  if (index == 3)
-                    Positioned(
-                      right: -3,
-                      top: -3,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: purple,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
+              Icon(icon, color: text, size: active ? 27 : 25),
+              const SizedBox(height: 3),
               Text(
                 label,
                 style: TextStyle(
                   color: text,
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
