@@ -26,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _firestore = FirestoreService();
   late final Stream<List<PostModel>> _postsStream;
 
-  final Map<String, bool> _supported = {};
   final Map<String, bool> _liked = {};
   final Map<String, bool> _saved = {};
   final Map<String, int> _localLikes = {};
@@ -119,9 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() {
     return Container(
-      height: 78,
+      height: 82,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
         children: [
           const Text(
@@ -143,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            icon: const Icon(Icons.add_box_outlined, color: text, size: 29),
+            icon: const Icon(Icons.add_box_outlined, color: text, size: 30),
           ),
 
           const SizedBox(width: 4),
@@ -155,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(
               Icons.favorite_border_rounded,
               color: text,
-              size: 30,
+              size: 31,
             ),
           ),
 
@@ -174,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(
                   Icons.chat_bubble_outline_rounded,
                   color: text,
-                  size: 29,
+                  size: 30,
                 ),
               ),
               Positioned(
@@ -229,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         return Container(
-          height: 138,
+          height: 128,
           color: Colors.white,
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
@@ -436,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!controller.value.isInitialized) {
       return AspectRatio(
-        aspectRatio: 4 / 5,
+        aspectRatio: 1.42,
         child: const Center(
           child: CircularProgressIndicator(color: purple, strokeWidth: 2),
         ),
@@ -453,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {});
       },
       child: AspectRatio(
-        aspectRatio: 4 / 5,
+        aspectRatio: 1.42,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -526,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _reelPlayer(post)
               else if (image.isNotEmpty)
                 AspectRatio(
-                  aspectRatio: 4 / 5,
+                  aspectRatio: 1.42,
                   child: Image.network(
                     image,
                     width: double.infinity,
@@ -591,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 14, 4),
+            padding: const EdgeInsets.fromLTRB(16, 9, 14, 3),
             child: Row(
               children: [
                 _postIcon(
@@ -845,41 +844,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
-              if (!isOwn)
-                OutlinedButton(
-                  onPressed: _user == null
-                      ? null
-                      : () => _toggleSupport(post.userId),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: (_supported[post.userId] ?? false)
-                        ? purple
-                        : text,
-                    side: BorderSide(
-                      color: (_supported[post.userId] ?? false) ? purple : text,
-                      width: 1,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    (_supported[post.userId] ?? false)
-                        ? 'Supporting'
-                        : 'Support',
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-
               IconButton(
                 onPressed: () {},
                 padding: EdgeInsets.zero,
@@ -911,7 +875,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 30, weight: 1.8),
+            Icon(icon, color: color, size: 29, weight: 1.8),
             if (count.isNotEmpty) ...[
               const SizedBox(width: 5),
               Text(
@@ -927,39 +891,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _toggleSupport(String uid) async {
-    final me = _user?.uid;
-    if (me == null || uid.isEmpty || me == uid) return;
-    final next = !(_supported[uid] ?? false);
-    setState(() => _supported[uid] = next);
-
-    final mine = FirebaseFirestore.instance
-        .collection('users')
-        .doc(me)
-        .collection('supporting')
-        .doc(uid);
-    final theirs = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('supporters')
-        .doc(me);
-
-    try {
-      if (next) {
-        await mine.set({'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
-        await theirs.set({
-          'uid': me,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        await mine.delete();
-        await theirs.delete();
-      }
-    } catch (_) {
-      if (mounted) setState(() => _supported[uid] = !next);
-    }
   }
 
   Future<void> _toggleLike(PostModel post) async {
@@ -1057,7 +988,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _navItem(Icons.home_rounded, 'Home', 0),
             _navItem(Icons.search_rounded, 'Search', 1),
             _navItem(Icons.ondemand_video_outlined, 'Reels', 2),
-            _navItem(Icons.auto_awesome_outlined, 'Discover', 3),
+            _navItem(Icons.shopping_bag_outlined, 'Shop', 3),
             _navItem(Icons.person_outline_rounded, 'Profile', 4),
           ],
         ),
