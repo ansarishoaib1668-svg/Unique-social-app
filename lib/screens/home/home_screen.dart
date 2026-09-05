@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(child: _tabs()),
                   SliverToBoxAdapter(child: _stories()),
                   StreamBuilder<List<PostModel>>(
                     stream: _postsStream,
@@ -121,42 +120,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() {
     return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: 72,
       color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
+          const Text(
+            'Viewsta',
+            style: TextStyle(
+              color: text,
+              fontSize: 31,
+              fontWeight: FontWeight.w800,
+              fontStyle: FontStyle.italic,
+              letterSpacing: -1.8,
+            ),
+          ),
+          const Spacer(),
+
           IconButton(
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const CreateHubScreen()),
             ),
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(Icons.add_box_outlined, color: text, size: 29),
           ),
-          const Spacer(),
-          const Text(
-            'Viewsta',
-            style: TextStyle(
-              color: text,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              fontStyle: FontStyle.italic,
-              letterSpacing: -1.5,
-            ),
-          ),
-          const Spacer(),
+
+          const SizedBox(width: 4),
+
           IconButton(
             onPressed: () {},
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(
               Icons.favorite_border_rounded,
               color: text,
-              size: 28,
+              size: 30,
             ),
           ),
+
+          const SizedBox(width: 2),
+
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -166,19 +171,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(builder: (_) => const ChatScreen()),
                 ),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 icon: const Icon(
                   Icons.chat_bubble_outline_rounded,
                   color: text,
-                  size: 27,
+                  size: 29,
                 ),
               ),
               Positioned(
-                right: 0,
-                top: 1,
+                right: -1,
+                top: -1,
                 child: Container(
-                  width: 20,
-                  height: 20,
+                  width: 21,
+                  height: 21,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(
                     color: Color(0xFFFF3040),
@@ -189,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -197,50 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _tabs() {
-    const labels = ['For You', 'Supporting', 'Fresh'];
-    return Container(
-      height: 51,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: border, width: .7)),
-      ),
-      child: Row(
-        children: List.generate(
-          labels.length,
-          (i) => Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _tab = i),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    labels[i],
-                    style: TextStyle(
-                      color: _tab == i ? text : muted,
-                      fontSize: 14,
-                      fontWeight: _tab == i ? FontWeight.w700 : FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: _tab == i ? 62 : 0,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: purple,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -269,16 +230,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         return Container(
-          height: 112,
+          height: 126,
           decoration: const BoxDecoration(
             color: Colors.white,
             border: Border(bottom: BorderSide(color: border, width: .7)),
           ),
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             scrollDirection: Axis.horizontal,
             itemCount: ids.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, index) => _storyItem(ids[index]),
           ),
         );
@@ -308,12 +269,12 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (_) => const MomentsScreen()),
           ),
           child: SizedBox(
-            width: 72,
+            width: 78,
             child: Column(
               children: [
                 Container(
-                  width: 68,
-                  height: 68,
+                  width: 72,
+                  height: 72,
                   padding: const EdgeInsets.all(2),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
@@ -858,10 +819,11 @@ class _HomeScreenState extends State<HomeScreen> {
               clipBehavior: Clip.none,
               children: [
                 Icon(icon, color: Colors.black, size: active ? 31 : 29),
+
                 if (index == 3)
                   Positioned(
-                    right: -3,
-                    top: -3,
+                    right: -4,
+                    top: -4,
                     child: Container(
                       width: 8,
                       height: 8,
