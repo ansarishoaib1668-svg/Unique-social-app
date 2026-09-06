@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/widgets/viewsta_icons.dart';
 
 import '../create/create_post_screen.dart';
 
@@ -144,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           _headerButton(
             icon: Icons.add_box_outlined,
+            customType: ViewstaIconType.create,
             onTap: () {
               Navigator.push(
                 context,
@@ -161,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _headerButton(
                 icon: Icons.favorite_border_rounded,
+                customType: ViewstaIconType.activity,
                 onTap: () {},
               ),
               Positioned(
@@ -178,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _headerButton(
                 icon: Icons.chat_bubble_outline_rounded,
+                customType: ViewstaIconType.chat,
                 onTap: () {},
               ),
               Positioned(
@@ -211,6 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _headerButton({
     required IconData icon,
     required VoidCallback onTap,
+    ViewstaIconType? customType,
   }) {
     return InkWell(
       onTap: onTap,
@@ -218,10 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SizedBox(
         width: 34,
         height: 34,
-        child: Icon(
-          icon,
+        child: ViewstaIcon(
+          type: customType ?? ViewstaIconType.activity,
           size: 30,
-          color: Colors.black,
         ),
       ),
     );
@@ -427,11 +431,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _bottomNavigation() {
     const items = [
-      (Icons.home_rounded, 'Home'),
-      (Icons.search_rounded, 'Search'),
-      (Icons.movie_creation_outlined, 'Reels'),
-      (Icons.auto_awesome_rounded, 'Discover'),
-      (Icons.person_outline_rounded, 'Profile'),
+      (ViewstaIconType.home, 'Home'),
+      (ViewstaIconType.search, 'Search'),
+      (ViewstaIconType.reels, 'Reels'),
+      (ViewstaIconType.discover, 'Discover'),
+      (ViewstaIconType.profile, 'Profile'),
     ];
 
     return Container(
@@ -464,11 +468,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          items[index].$1,
+                        ViewstaIcon(
+                          type: items[index].$1,
                           size: 27,
                           color: Colors.black,
-                          fill: active ? 1 : 0,
+                          filled: active,
                         ),
                         const SizedBox(height: 3),
                         Text(
@@ -983,11 +987,10 @@ class _PostCardState extends State<_PostCard> {
         children: [
           GestureDetector(
             onTap: _toggleLike,
-            child: Icon(
-              liked
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
+            child: ViewstaIcon(
+              type: ViewstaIconType.like,
               size: 31,
+              filled: liked,
               color: liked
                   ? const Color(0xFFFF3040)
                   : Colors.black,
@@ -998,8 +1001,8 @@ class _PostCardState extends State<_PostCard> {
 
           GestureDetector(
             onTap: _comments,
-            child: const Icon(
-              Icons.chat_bubble_outline_rounded,
+            child: const ViewstaIcon(
+              type: ViewstaIconType.comment,
               size: 31,
             ),
           ),
@@ -1008,8 +1011,8 @@ class _PostCardState extends State<_PostCard> {
 
           GestureDetector(
             onTap: _share,
-            child: const Icon(
-              Icons.send_outlined,
+            child: const ViewstaIcon(
+              type: ViewstaIconType.share,
               size: 31,
             ),
           ),
@@ -1018,11 +1021,10 @@ class _PostCardState extends State<_PostCard> {
 
           GestureDetector(
             onTap: _toggleSave,
-            child: Icon(
-              saved
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
+            child: ViewstaIcon(
+              type: ViewstaIconType.save,
               size: 31,
+              filled: saved,
             ),
           ),
         ],
